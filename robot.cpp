@@ -1,0 +1,205 @@
+// robot.cpp
+#include "robot.h"
+#include "HUBeeWheel.h"
+
+//declare two wheel objects - each encapsulates all the control functions for a wheel
+HUBeeBMDWheel wheel[NBR_WHEELS];
+
+
+robotMotorClass motors(MOTOR_SERVICE, NO_EVENT);
+
+robotMotorClass::robotMotorClass(const char svcId, const char evtId)
+  :asipServiceClass(svcId,evtId)
+{}
+
+// each motor uses 3 pins, the array order is: m0In1, m0In2, m0pwm, m1In1, m1In2, m1pwm, ...)
+// pinCount is three times the number of motors
+ void robotMotorClass::begin(byte nbrElements, byte pinCount, const pinArray_t pins[])
+{
+  asipServiceClass::begin(nbrElements,pinCount,pins);
+  wheel[0].setupPins(pins[0], pins[1],pins[2]); //first two pins are for direction control, and 3rd for PWM speed control
+  wheel[1].setupPins(pins[3], pins[4],pins[5]);
+  for(int i=0; i < NBR_WHEELS; i++) {
+     wheel[i].setDirectionMode(0); //Direction Mode determines how the wheel responds to positive and negative motor power values 
+     wheel[i].setBrakeMode(0); //Sets the brake mode to zero - freewheeling mode - so wheels are easy to turn by hand
+  }
+}
+
+void robotMotorClass::reportValue(int sequenceId, Stream * stream)  // send the value of the given device
+{
+   stream->println("motor");
+}
+
+ void robotMotorClass::reportValues(Stream *stream)
+{
+
+}
+  
+void robotMotorClass::setMotor(byte motor, int speed)
+{
+   if(motor < NBR_WHEELS){
+       speed = constrain(speed,-255,255);
+       wheel[motor].setMotorPower(speed);
+       printf("Motor %d set to %d\n", motor, speed);
+   }
+}
+
+void robotMotorClass::setMotors(int speed0, int speed1)
+{
+  // TODO this assumes only two motors
+   setMotor(0, speed0);
+   setMotor(1, speed1);
+}
+
+void robotMotorClass::stopMotor(byte motor)
+{
+   if(motor < NBR_WHEELS){
+       wheel[motor].setMotorPower(0);
+       printf("Motor %d stopped\n");
+   }
+}
+
+void robotMotorClass::stopMotors()
+{
+    for(int i=0; i < NBR_WHEELS; i++ ){
+        wheel[i].setMotorPower(0);
+    }
+    // todo set flag to reset encoder count on next power up ???
+}
+   
+void robotMotorClass::processRequestMsg(Stream *stream)
+{
+   int arg0, arg1; 
+   int request = stream->read();
+   // parse the correct number of arguments for each method 
+   if( request == SET_MOTOR || request == SET_MOTORS || request == STOP_MOTOR) {
+      arg0 = stream->parseInt();  
+      if( request != STOP_MOTOR) {
+         arg1 = stream->parseInt();  
+      }
+   }   
+   switch(request) {
+      case SET_MOTOR:   setMotor(arg0,arg1);  break;
+      case SET_MOTORS:  setMotors(arg0,arg1);break; // TODO this assumes only two motors
+      case STOP_MOTOR:  stopMotor(arg0); break;
+      case STOP_MOTORS: stopMotors(); break; 
+      default: reportError(ServiceId, request, ERR_UNKNOWN_REQUEST, stream);
+   }
+}
+
+encoderClass encoders(ENCODER_SERVICE,ENCODER_EVENT);
+
+encoderClass::encoderClass(const char svcId, const char evtId) : asipServiceClass(svcId,evtId){}
+
+// each encoder uses 2 pins
+void encoderClass::begin(byte nbrElements, byte pinCount, const pinArray_t pins[])
+{
+ asipServiceClass::begin(nbrElements,pinCount,pins);
+   encodersBegin(); // todo - use the pins array instead of hard codeing in hubeeWheel.cpp
+}
+
+void encoderClass::reportValues(Stream *stream) 
+{
+  encodersGetData(pulse[0], count[0], pulse[1], count[1]);
+  asipServiceClass::reportValues(stream);    
+  // pulse width is in microseconds
+}
+
+ void encoderClass::reportValue(int sequenceId, Stream * stream)  // send the value of the given device
+{
+   if( sequenceId < nbrElements) {
+       stream->print(pulse[sequenceId]);
+       stream->write(',');
+       stream->print(count[sequenceId]);
+    }
+}
+
+void encoderClass::processRequestMsg(Stream *stream)
+{
+   int request = stream->read();
+   if(request == ENCODER_REQUEST) {
+     setAutoreport(stream);
+   }
+   else {
+     reportError(ServiceId, request, ERR_UNKNOWN_REQUEST, stream);
+   }
+}
+
+bumpSensorClass bumpSensors(BUMP_SERVICE, BUMP_EVENT);
+
+bumpSensorClass::bumpSensorClass(const char svcId, const char evtId) : asipServiceClass(svcId,evtId){}
+
+void bumpSensorClass::bumpSensorClass::begin(byte nbrElements, byte pinCount, const pinArray_t pins[])
+{ 
+  asipServiceClass::begin(nbrElements,pinCount,pins);
+  for(int sw=0; sw < nbrElements; sw++) {     
+     pinMode(pins[sw], INPUT_PULLUP); 
+  }
+}
+
+ void bumpSensorClass::reportValue(int sequenceId, Stream * stream)  // send the value of the given device
+{
+   if( sequenceId < pinCount) {
+       //pinMode(pins[sequenceId], INPUT_PULLUP); 
+       boolean value = digitalRead(pins[sequenceId]);
+       stream->print(value ? "1":"0");
+    }
+}
+
+void bumpSensorClass::processRequestMsg(Stream *stream)
+{
+   int request = stream->read();
+   if(request == BUMP_REQUEST) {
+      setAutoreport(stream);
+   }
+   else {
+     reportError(ServiceId, request, ERR_UNKNOWN_REQUEST, stream);
+   }
+}
+
+
+irLineSensorClass irLineSensors(IR_REFLECTANCE_SERVICE,IR_LINE_EVENT);  // create an instance
+
+irLineSensorClass::irLineSensorClass(const char svcId, const char evtId) : asipServiceClass(svcId,evtId){}
+
+void irLineSensorClass::begin(byte nbrElements, byte pinCount, const pinArray_t pins[]) 
+{
+  asipServiceClass::begin(nbrElements,pinCount,pins);
+  pinMode(pins[0], OUTPUT);
+  digitalWrite(pins[0], LOW);
+}
+
+void irLineSensorClass::reportValues(Stream *stream) 
+{
+   // turn on IR emitters
+   digitalWrite(pins[0], HIGH);
+   delay(5);
+   asipServiceClass::reportValues(stream);
+    // turn off IR emitters
+   digitalWrite(pins[0], LOW);
+}
+
+void irLineSensorClass::reportValue(int sequenceId, Stream * stream)  // send the value of the given device
+{
+   if( sequenceId < nbrElements) {
+      int pin = pins[sequenceId+1]; // the first pin is the control pin
+      pin = PIN_TO_ANALOG(pin); // convert digital number to analog
+      int value = analogRead(pin);   
+      stream->print(value);
+    }
+}
+
+void irLineSensorClass::processRequestMsg(Stream *stream)
+{
+   int request = stream->read();
+   if(request == IR_LINE_REQUEST) {
+      setAutoreport(stream);
+   }
+   else {
+     reportError(ServiceId, request, ERR_UNKNOWN_REQUEST, stream);
+   }
+}
+
+
+
+ 

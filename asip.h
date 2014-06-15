@@ -1,0 +1,107 @@
+// asip.h
+
+#ifndef asip_h
+#define asip_h
+
+#include "Boards.h"  // Hardware pin macros
+#include "Arduino.h"
+
+#define PRINTF_DEBUG
+#define VERBOSE_DEBUG(X) //X  // uncomment x to enable verbose debug
+
+#ifdef PRINTF_DEBUG
+static char _buf[64];
+#define printf(...)                 \
+    do { sprintf(_buf, __VA_ARGS__); Serial.write(_buf); } while (0) 
+ #else
+ #define printf(...) 
+ #endif
+
+/* Version numbers for the protocol.  
+ * This number can be queried so that host software can test
+ *  whether it will be compatible with the installed firmware. 
+ */ 
+const int ASIP_MAJOR_VERSION  = 0; // for non-compatible changes
+const int ASIP_MINOR_VERSION  = 1; // for backwards compat
+
+typedef byte pinArray_t; // the type used by services to provide an array of needed pins 
+
+enum pinMode_t {UNALLOCATED_PIN_MODE, INPUT_MODE, INPUT_PULLUP_MODE, OUTPUT_MODE, ANALOG_MODE, PWM_MODE, INVALID_MODE=-3, OTHER_SERVICE_MODE=-2,  RESERVED_MODE=-1};
+
+/*
+#define pinMode_t byte // todo
+
+// pin mode defines:
+//#define INPUT                 0x00 // defined in Arduino.h
+//#define OUTPUT                0x01 // defined in Arduino.h
+//#define INPUT_PULLUP          0x02 // defined in Arduino.h
+#define ANALOG                  0x03 // pin in analogInput mode
+#define PWM                     0x04 // digital pin in PWM output mode
+
+*/
+
+//System messages
+const char EVENT_HEADER        = '@';  // event messages are preceded with this tag 
+const char ERROR_MSG_HEADER    = '~';  // error messages begin with this tag
+
+// error messages
+enum asipErr_t {ERR_NO_ERROR, ERR_INVALID_SERVICE, ERR_UNKNOWN_REQUEST, ERR_INVALID_PIN, ERR_MODE_UNAVAILABLE, ERR_INVALID_MODE, ERR_WRONG_MODE, ERR_INVALID_DEVICE_NUMBER, ERR_DEVICE_NOT_AVAILABLE};
+
+const byte MIN_MSG_LEN = 4;  // valid request messages must be at least this many characters
+
+const char NO_EVENT = '\0';  // tag to indicate the a service does not produce an event
+
+class asipServiceClass 
+{
+public:
+  asipServiceClass(const char svcId, const char evtId); 
+  virtual ~asipServiceClass();  
+  virtual void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);    
+  virtual void reportValue(int sequenceId, Stream * stream)  = 0; // send the value of the given device
+  virtual void reportValues(Stream *stream); // send all values separated by commas, preceded by header and terminated with newline
+  virtual void setAutoreport(Stream *stream); // how many ticks between events, 0 disables 
+  virtual void processRequestMsg(Stream *stream) = 0;
+  //virtual void reportInvalidRequest( const char svc, const char request, const char *errorMessage, Stream *stream);
+  virtual void reportError( const char svc, const char request, asipErr_t errno, Stream *stream); // report service request errors
+  
+   // todo - protect these but give access to asipClass
+   const char ServiceId;       // the unique character that identifies this service 
+   unsigned int autoInterval;  // the number of ticks between each autoevent, 0 disables autoevents
+   unsigned int nextTrigger;   // tick value for the next event (note this rolls over after 65 seconds so intervals should be limited to under one minute
+   
+protected:
+   const char EventId;        // the unique character that identifies the default event provided by service
+   byte nbrElements;         // the number of items supported by this service
+   byte pinCount;            // total number of pins in the pins array 
+   const pinArray_t *pins;   // stores pins used by this service  
+  
+};
+
+class asipClass 
+{
+public:
+  asipClass();
+  void begin(Stream *s, int svcCount, asipServiceClass *serviceArray[] );
+  void service();
+  // low level interface 
+  void sendAnalog(byte pin, int value);
+  void sendDigitalPort(byte portNumber, int portData);
+  asipErr_t registerPinMode(byte pin, pinMode_t mode);
+  pinMode_t getPinMode(byte pin); 
+  void sendPinModes(); 
+  void sendPinMap(); 
+  void sendErrorMessage( const char svc, const char tag, asipErr_t errno, Stream *stream); 
+
+private:
+  Stream *serial;
+  unsigned int autoEventTickDuration; // the number of milliseconds between each event tick
+  unsigned int previousTick;
+  asipServiceClass **services;
+  int nbrServices; 
+  pinMode_t pinModes[NUM_DIGITAL_PINS]; // defined in pins_arduino.h for each board
+
+ };
+ 
+extern asipClass asip;
+
+#endif
