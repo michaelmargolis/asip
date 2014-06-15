@@ -19,6 +19,7 @@
 #define THERMISTOR 18
 #define PHOTOCELL 19
 
+char * sketchName = "TestIO";
 // the order of the following pins is service specific, see the service definition for details
 const pinArray_t servoPins[] = {SERVO};     
 
@@ -33,8 +34,8 @@ void setup() {
   Serial.begin(57600);
  // Serial.begin(250000);
   
-  asip.begin(&Serial, nbrServices, (asipServiceClass **)&services); 
-  asipIO.begin(0,0,0); // this service ignores these arguments      int err = asip.registerPinMode(0,RESERVED_MODE);  // block the serial pins from being allocated
+  asip.begin(&Serial, nbrServices, (asipServiceClass **)&services, sketchName ); 
+  asipIO.begin(); // start the IO service
   asip.registerPinMode(0,RESERVED_MODE);  // reserver pins used by the serial port 
   asip.registerPinMode(1,RESERVED_MODE);  
 

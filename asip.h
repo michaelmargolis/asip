@@ -86,7 +86,7 @@ class asipClass
 {
 public:
   asipClass();
-  void begin(Stream *s, int svcCount, asipServiceClass *serviceArray[] );
+  void begin(Stream *s, int svcCount, asipServiceClass *serviceArray[], char *sketchName );
   void service();
   // low level interface 
   void sendAnalog(byte pin, int value);
@@ -99,6 +99,7 @@ public:
 
 private:
   Stream *serial;
+  char *programName;
   unsigned int autoEventTickDuration; // the number of milliseconds between each event tick
   unsigned int previousTick;
   asipServiceClass **services;

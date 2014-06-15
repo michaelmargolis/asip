@@ -31,11 +31,12 @@ class asipIOClass : public asipServiceClass
 {  
 public:
    asipIOClass(const char svcId, const char evtId);
-   void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);
+   void begin(void); // this class does not use the base class begin arguments
    void reportValues(Stream * stream);
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device   
    void processRequestMsg(Stream *stream);
 private:
+   void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);
    void reportAnalogPin(byte pin,boolean report);  // sets pin mode and flag for unsolicited messages
    void reportDigitalPin(byte pin,boolean report); // sets pin mode and flag for unsolicited messages
    asipErr_t PinMode(byte pin, int mode);

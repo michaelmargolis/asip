@@ -9,8 +9,9 @@ char * errStr[] = {"NO_ERROR", "INVALID_SERVICE", "UNKNOWN_REQUEST", "INVALID_PI
 asipClass:: asipClass(){
   
 }
-
-void asipClass::begin(Stream *s, int svcCount, asipServiceClass **serviceArray )
+ 
+ 
+void asipClass::begin(Stream *s, int svcCount, asipServiceClass **serviceArray, char *sketchName )
 {
   serial = s;
   services = serviceArray;
@@ -20,8 +21,12 @@ void asipClass::begin(Stream *s, int svcCount, asipServiceClass **serviceArray )
   for(byte p=0; p < NUM_DIGITAL_PINS; p++) {
      pinModes[p] = UNALLOCATED_PIN_MODE;
   }
+   programName = sketchName;
+  s->print(sketchName);  
   // list all implemented service tags
-  s->print("Services implemented: ");
+  s->print(" running on an ");
+  s->print(CHIP_NAME);
+  s->print(" with Services: ");
   for(int i=0; i < svcCount; i++ ){
     s->write(services[i]->ServiceId);
     s->write(' ');
@@ -95,7 +100,9 @@ void asipClass::processSystemMsg()
       serial->write(',');
       serial->print(ASIP_MINOR_VERSION);
 	  serial->write(',');
-	  serial->println(CHIP_NAME);
+	  serial->print(CHIP_NAME);
+	  serial->write(',');
+	  serial->println(programName);
    }
    else {
      sendErrorMessage(SYSTEM_MSG_HEADER, request, ERR_UNKNOWN_REQUEST, serial);

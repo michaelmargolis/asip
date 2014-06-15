@@ -7,6 +7,8 @@
 
 #include <Servo.h> // needed for the servo service 
 
+char * sketchName = "Mirtle";
+
 // the order of the following pins is service specific, see the service definition for details
 const pinArray_t motorPins[] = {8,11,9,12,13,10};
 const pinArray_t encoderPins[] = {wheel_1QeiAPin,wheel_1QeiBPin, // defined in HUBeeWheel.h
@@ -33,8 +35,8 @@ void setup() {
   Serial.begin(57600);
  // Serial.begin(250000);
   
-  asip.begin(&Serial, nbrServices, (asipServiceClass **)&services); 
-  asipIO.begin(0,0,0); // this service ignores these arguments  
+  asip.begin(&Serial, nbrServices, (asipServiceClass **)&services, sketchName); 
+  asipIO.begin(); 
   asip.registerPinMode(0,RESERVED_MODE);  // block the serial pins from being allocated
   asip.registerPinMode(1,RESERVED_MODE);
   motors.begin(2,6,motorPins); // two motors that use a total of 6 pins  

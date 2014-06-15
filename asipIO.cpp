@@ -21,13 +21,18 @@ asipIOClass asipIO(IO_SERVICE,ANALOG_VALUE);
 {
 }
 
-void asipIOClass::begin(byte nbrElements, byte pinCount, const pinArray_t pins[])
+void asipIOClass::begin( )
 {
   // arguments are ignored because the hardware is accessed directly  through registers
   analogInputsToReport = 0;
   for( byte p = 0; p < NUM_DIGITAL_PINS; p++) {
      AssignPort(p);
    }
+}
+
+void asipIOClass::begin(byte nbrElements, byte pinCount, const pinArray_t pins[])
+{
+
 }
 
 void asipIOClass::reportValue(int sequenceId, Stream * stream)  // send the value of the given device
