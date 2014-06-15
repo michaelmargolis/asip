@@ -39,7 +39,7 @@ void asipClass::service()
   if(serial->available() >= MIN_MSG_LEN) {  
      int tag = serial->read();
      if( tag != '\n') { // for now, ignore the newline at the end of the message   
-        if(tag = SYSTEM_MSG_HEADER) {
+        if(tag == SYSTEM_MSG_HEADER) {
 		  if(serial->read() == ',') {// tag must be followed by a separator 
               processSystemMsg();
            }
