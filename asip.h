@@ -41,6 +41,11 @@ enum pinMode_t {UNALLOCATED_PIN_MODE, INPUT_MODE, INPUT_PULLUP_MODE, OUTPUT_MODE
 */
 
 //System messages
+// Request messages to Arduino
+const char SYSTEM_MSG_HEADER      = '#';  // system requests are preceded with this tag
+const char SYSTEM_GET_INFO        = '?';  // Get version and hardware info
+
+// messages from Arduino
 const char EVENT_HEADER        = '@';  // event messages are preceded with this tag 
 const char ERROR_MSG_HEADER    = '~';  // error messages begin with this tag
 
@@ -99,6 +104,7 @@ private:
   asipServiceClass **services;
   int nbrServices; 
   pinMode_t pinModes[NUM_DIGITAL_PINS]; // defined in pins_arduino.h for each board
+  void processSystemMsg();
 
  };
  

@@ -29,6 +29,23 @@
 #define IS_PIN_PWM(P)  (digitalPinHasPWM(P))
 #define PIN_TO_PWM(P)  (P)
 
+// board name macros
+#if defined(__AVR_ATmega168__)
+#define CHIP_NAME "ATmega168" 
+#elif defined(__AVR_ATmega328__)
+#define CHIP_NAME "ATmega328"
+#elif defined(__AVR_ATmega328P__)
+#define CHIP_NAME "ATmega328P"
+#elif defined(__AVR_ATmega32U4__)
+#define CHIP_NAME "ATmega32U4"
+#elif defined(__AVR_ATmega1280__)
+#define CHIP_NAME "ATmega1280"
+#elif defined(__AVR_ATmega2560__) 
+#define CHIP_NAME "ATmega2560"
+#else 
+#define CHIP_NAME "Unrecognized chip"
+#endif
+
 #endif 
 
 

@@ -34,21 +34,27 @@ void asipClass::service()
   if(serial->available() >= MIN_MSG_LEN) {  
      int tag = serial->read();
      if( tag != '\n') { // for now, ignore the newline at the end of the message   
-        int svc = 0; 
-        while(svc < nbrServices) {   
-          if( services[svc]->ServiceId == tag) {
-            if(serial->read() == ',') {// tag must be followed by a separator        
-              services[svc]->processRequestMsg(serial);
-             break;
+        if(tag = SYSTEM_MSG_HEADER) {
+		  if(serial->read() == ',') {// tag must be followed by a separator 
+              processSystemMsg();
+           }
+        }
+        else {
+          int svc = 0; 
+          while(svc < nbrServices) {   
+            if( services[svc]->ServiceId == tag) {
+              if(serial->read() == ',') {// tag must be followed by a separator        
+                services[svc]->processRequestMsg(serial);
+               break;
+              }
             }
-          }
-         svc++;
-         if(svc >= nbrServices) { // check if no match
-           sendErrorMessage(tag, '?', ERR_INVALID_SERVICE, serial);         
+           svc++;
+           if(svc >= nbrServices) { // check if no match
+             sendErrorMessage(tag, '?', ERR_INVALID_SERVICE, serial);         
+            } 
           } 
-        }                    
-       
-    }
+        }	        
+     }
   }
   // service digital inputs
   sendDigitalPortChanges(serial);
@@ -74,6 +80,26 @@ void asipClass::service()
       }
     }
   }
+}
+
+void asipClass::processSystemMsg()
+{
+   int request = serial->read();
+   if(request == SYSTEM_GET_INFO) {
+      serial->write(EVENT_HEADER);   
+      serial->write(SYSTEM_MSG_HEADER);
+      serial->write(',');
+      serial->write(SYSTEM_GET_INFO);
+      serial->write(',');
+      serial->print(ASIP_MAJOR_VERSION);
+      serial->write(',');
+      serial->print(ASIP_MINOR_VERSION);
+	  serial->write(',');
+	  serial->println(CHIP_NAME);
+   }
+   else {
+     sendErrorMessage(SYSTEM_MSG_HEADER, request, ERR_UNKNOWN_REQUEST, serial);
+   }
 }
 
 // returns error code
@@ -160,9 +186,10 @@ void asipClass::sendErrorMessage( const char svc, const char tag, asipErr_t errn
   stream->write(tag);  
   stream->write(':');  
   stream->print(errno);
-  stream->print(',(');  
+  stream->print('(');  
   stream->print(errStr[errno]); 
-  stream->println(')');   
+  stream->println(')');  
+  
 } 
 
 asipClass asip;
@@ -215,22 +242,7 @@ void asipServiceClass::setAutoreport(Stream *stream) // reads stream for number 
   Serial.print("auto report set to "); Serial.print(ticks); Serial.print(" for service "); Serial.write(ServiceId); Serial.println();
 }
 
-/*
-void asipServiceClass::reportInvalidRequest( const char svc, const char request, const char *errorMessage, Stream *stream)
-{
-  stream->write(ERROR_MSG_HEADER);
-  stream->write(svc);
-  stream->write(',');
-  stream->write(request);
-  stream->write(':');
-  stream->println(errorMessage);  // user supplied error message
-}
-*/
-
 void asipServiceClass::reportError( const char svc, const char request, asipErr_t errno, Stream *stream)
 {
    asip.sendErrorMessage(svc,request, errno, stream);
 }
-
-  
-
