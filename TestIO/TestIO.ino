@@ -40,10 +40,8 @@ void setup() {
   asip.registerPinMode(1,RESERVED_MODE);  
 
   servos.begin(1,1,servoPins);
-  Serial.println("ready");
   asip.sendPinModes(); // for debug
-  asip.sendPinMap(); 
-
+  asip.sendPinMap();
 }
 
 void loop() 

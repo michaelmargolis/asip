@@ -1,4 +1,13 @@
-// asip.cpp
+/*
+ * asip.cpp -  Arduino Services Interface Protocol (ASIP)
+ * 
+ * Copyright (C) 2014 Michael Margolis
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ */
+
 
 #include "asip.h"
 #include "asipIO.h"
@@ -22,16 +31,19 @@ void asipClass::begin(Stream *s, int svcCount, asipServiceClass **serviceArray, 
      pinModes[p] = UNALLOCATED_PIN_MODE;
   }
    programName = sketchName;
+  s->write(DEBUG_MSG_HEADER);
   s->print(sketchName);  
   // list all implemented service tags
   s->print(" running on an ");
   s->print(CHIP_NAME);
   s->print(" with Services: ");
+  
   for(int i=0; i < svcCount; i++ ){
     s->write(services[i]->ServiceId);
     s->write(' ');
   }
   s->println();  
+ 
 }
 
 void asipClass::service()
@@ -68,12 +80,6 @@ void asipClass::service()
   unsigned int currentTick = millis();
   if(currentTick - previousTick > autoEventTickDuration) {
     previousTick += autoEventTickDuration;
-    for(byte p=0; p < NUM_DIGITAL_PINS; p++) {
-       if( pinModes[p] == ANALOG_MODE) {
-       
-       }
-    }
-    currentTick = millis();
     for(int i=0; i < nbrServices; i++) {
       if( services[i]->autoInterval > 0) {  // zero disables autoInterval
           //VERBOSE_DEBUG(  printf("Auto report, tick= %u, trig = %u, interval=%u\n",currentTick,(currentTick - services[i]->nextTrigger),services[i]->autoInterval);)
@@ -246,7 +252,7 @@ void asipServiceClass::setAutoreport(Stream *stream) // reads stream for number 
   autoInterval = ticks;
   unsigned int currentTick = millis(); // truncate to a 16 bit value
   nextTrigger = currentTick + autoInterval; // set the next trigger tick count
-  Serial.print("auto report set to "); Serial.print(ticks); Serial.print(" for service "); Serial.write(ServiceId); Serial.println();
+    printf("auto report set to %u for service %d\n",ticks, ServiceId);
 }
 
 void asipServiceClass::reportError( const char svc, const char request, asipErr_t errno, Stream *stream)

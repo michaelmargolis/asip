@@ -1,4 +1,12 @@
-// asip.h
+/*
+ * asip.h -  Arduino Services Interface Protocol (ASIP)
+ * 
+ * Copyright (C) 2014 Michael Margolis
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ */
 
 #ifndef asip_h
 #define asip_h
@@ -9,36 +17,17 @@
 #define PRINTF_DEBUG
 #define VERBOSE_DEBUG(X) //X  // uncomment x to enable verbose debug
 
-#ifdef PRINTF_DEBUG
-static char _buf[64];
-#define printf(...)                 \
-    do { sprintf(_buf, __VA_ARGS__); Serial.write(_buf); } while (0) 
- #else
- #define printf(...) 
- #endif
 
 /* Version numbers for the protocol.  
  * This number can be queried so that host software can test
  *  whether it will be compatible with the installed firmware. 
  */ 
 const int ASIP_MAJOR_VERSION  = 0; // for non-compatible changes
-const int ASIP_MINOR_VERSION  = 1; // for backwards compat
+const int ASIP_MINOR_VERSION  = 1; // for backwards compatibility
 
 typedef byte pinArray_t; // the type used by services to provide an array of needed pins 
 
 enum pinMode_t {UNALLOCATED_PIN_MODE, INPUT_MODE, INPUT_PULLUP_MODE, OUTPUT_MODE, ANALOG_MODE, PWM_MODE, INVALID_MODE=-3, OTHER_SERVICE_MODE=-2,  RESERVED_MODE=-1};
-
-/*
-#define pinMode_t byte // todo
-
-// pin mode defines:
-//#define INPUT                 0x00 // defined in Arduino.h
-//#define OUTPUT                0x01 // defined in Arduino.h
-//#define INPUT_PULLUP          0x02 // defined in Arduino.h
-#define ANALOG                  0x03 // pin in analogInput mode
-#define PWM                     0x04 // digital pin in PWM output mode
-
-*/
 
 //System messages
 // Request messages to Arduino
@@ -48,6 +37,7 @@ const char SYSTEM_GET_INFO        = '?';  // Get version and hardware info
 // messages from Arduino
 const char EVENT_HEADER        = '@';  // event messages are preceded with this tag 
 const char ERROR_MSG_HEADER    = '~';  // error messages begin with this tag
+const char DEBUG_MSG_HEADER    = '!';  // debug messages begin with this tag
 
 // error messages
 enum asipErr_t {ERR_NO_ERROR, ERR_INVALID_SERVICE, ERR_UNKNOWN_REQUEST, ERR_INVALID_PIN, ERR_MODE_UNAVAILABLE, ERR_INVALID_MODE, ERR_WRONG_MODE, ERR_INVALID_DEVICE_NUMBER, ERR_DEVICE_NOT_AVAILABLE};
@@ -55,6 +45,19 @@ enum asipErr_t {ERR_NO_ERROR, ERR_INVALID_SERVICE, ERR_UNKNOWN_REQUEST, ERR_INVA
 const byte MIN_MSG_LEN = 4;  // valid request messages must be at least this many characters
 
 const char NO_EVENT = '\0';  // tag to indicate the a service does not produce an event
+
+
+#ifdef PRINTF_DEBUG
+static char _buf[64];
+#define printf(...) 						\
+    Serial.write(DEBUG_MSG_HEADER);   \
+	do {							\
+		sprintf(_buf, __VA_ARGS__); Serial.write(_buf);	\
+	} while (0)	
+	
+ #else
+ #define printf(...) 
+ #endif
 
 class asipServiceClass 
 {

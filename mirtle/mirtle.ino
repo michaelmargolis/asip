@@ -45,7 +45,6 @@ void setup() {
   irLineSensors.begin(3,4,irReflectancePins); // 3 sensors plus control pin
   distanceSensor.begin(1,1,distancePins);
   //servos.begin(1,1,servoPins);
-  Serial.println("ready");
   asip.sendPinModes(); // for debug
   asip.sendPinMap(); 
 }

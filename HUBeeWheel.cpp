@@ -136,7 +136,7 @@ void HUBeeBMDWheel::setMotor()
     stopMotor();
     return;
   }
-  Serial.print("pwm on pin "); Serial.print(_PWM); Serial.print(" set to "); Serial.println(rawPower);
+  printf("pwm on pin %d set to %d\n",_PWM, rawPower);
   //write the speed value to PWM
   analogWrite(_PWM, rawPower);
   //XOR the motor Direction and motorDirectionMode boolean values
