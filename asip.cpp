@@ -12,6 +12,10 @@
 #include "asip.h"
 #include "asipIO.h"
 
+#ifdef PRINTF_DEBUG
+char _buf[64];
+#endif
+
 // message strings, Move this to program memory ?
 char * errStr[] = {"NO_ERROR", "INVALID_SERVICE", "UNKNOWN_REQUEST", "INVALID_PIN", "MODE_UNAVAILABLE", "INVALID_MODE", "WRONG_MODE", "INVALID_DEVICE_NUMBER", "DEVICE_NOT_AVAILABLE"};
  
@@ -52,7 +56,7 @@ void asipClass::service()
      int tag = serial->read();
      if( tag != '\n') { // for now, ignore the newline at the end of the message   
         if(tag == SYSTEM_MSG_HEADER) {
-		  if(serial->read() == ',') {// tag must be followed by a separator 
+          if(serial->read() == ',') {// tag must be followed by a separator 
               processSystemMsg();
            }
         }
@@ -70,7 +74,7 @@ void asipClass::service()
              sendErrorMessage(tag, '?', ERR_INVALID_SERVICE, serial);         
             } 
           } 
-        }	        
+        }           
      }
   }
   // service digital inputs
@@ -105,10 +109,10 @@ void asipClass::processSystemMsg()
       serial->print(ASIP_MAJOR_VERSION);
       serial->write(',');
       serial->print(ASIP_MINOR_VERSION);
-	  serial->write(',');
-	  serial->print(CHIP_NAME);
-	  serial->write(',');
-	  serial->println(programName);
+      serial->write(',');
+      serial->print(CHIP_NAME);
+      serial->write(',');
+      serial->println(programName);
    }
    else {
      sendErrorMessage(SYSTEM_MSG_HEADER, request, ERR_UNKNOWN_REQUEST, serial);
@@ -205,6 +209,15 @@ void asipClass::sendErrorMessage( const char svc, const char tag, asipErr_t errn
   
 } 
 
+void asipClass::startI2C()
+{
+  if(I2C_Started == false) {  
+     Wire.begin();
+     I2C_Started = true;
+  }
+}
+
+
 asipClass asip;
 
 
@@ -223,7 +236,14 @@ void asipServiceClass::begin(byte _nbrElements, byte _pinCount, const pinArray_t
   for( byte p=0; p <pinCount; p++) {
      asip.registerPinMode(pins[p], OTHER_SERVICE_MODE);
   }
-  //Serial.write(ServiceId); Serial.println(" svc begin");
+  //printf(%d, svc begin\n",ServiceId);
+}
+
+void asipServiceClass::begin(byte _nbrElements) // begin with no pins starts an I2C service
+{
+  nbrElements =  _nbrElements;
+  autoInterval = 0; // turn off auto events
+  asip.startI2C();
 }
 
 asipServiceClass::~asipServiceClass(){} 

@@ -13,6 +13,7 @@
 
 #include "Boards.h"  // Hardware pin macros
 #include "Arduino.h"
+#include "Wire.h"  // for I2C services
 
 #define PRINTF_DEBUG
 #define VERBOSE_DEBUG(X) //X  // uncomment x to enable verbose debug
@@ -48,13 +49,13 @@ const char NO_EVENT = '\0';  // tag to indicate the a service does not produce a
 
 
 #ifdef PRINTF_DEBUG
-static char _buf[64];
-#define printf(...) 						\
+extern char _buf[64];
+#define printf(...)                         \
     Serial.write(DEBUG_MSG_HEADER);   \
-	do {							\
-		sprintf(_buf, __VA_ARGS__); Serial.write(_buf);	\
-	} while (0)	
-	
+    do {                            \
+        sprintf(_buf, __VA_ARGS__); Serial.write(_buf); \
+    } while (0) 
+    
  #else
  #define printf(...) 
  #endif
@@ -65,6 +66,7 @@ public:
   asipServiceClass(const char svcId, const char evtId); 
   virtual ~asipServiceClass();  
   virtual void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);    
+  virtual void begin(byte nbrElements); // begin with no pins starts an I2C service
   virtual void reportValue(int sequenceId, Stream * stream)  = 0; // send the value of the given device
   virtual void reportValues(Stream *stream); // send all values separated by commas, preceded by header and terminated with newline
   virtual void setAutoreport(Stream *stream); // how many ticks between events, 0 disables 
@@ -99,7 +101,7 @@ public:
   void sendPinModes(); 
   void sendPinMap(); 
   void sendErrorMessage( const char svc, const char tag, asipErr_t errno, Stream *stream); 
-
+  void startI2C(); // must be called at least once to use I2C services
 private:
   Stream *serial;
   char *programName;
@@ -108,6 +110,8 @@ private:
   asipServiceClass **services;
   int nbrServices; 
   pinMode_t pinModes[NUM_DIGITAL_PINS]; // defined in pins_arduino.h for each board
+  boolean I2C_Started;
+
   void processSystemMsg();
 
  };
