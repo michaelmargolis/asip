@@ -17,7 +17,7 @@ char _buf[64];
 #endif
 
 // message strings, Move this to program memory ?
-char * errStr[] = {"NO_ERROR", "INVALID_SERVICE", "UNKNOWN_REQUEST", "INVALID_PIN", "MODE_UNAVAILABLE", "INVALID_MODE", "WRONG_MODE", "INVALID_DEVICE_NUMBER", "DEVICE_NOT_AVAILABLE"};
+char * errStr[] = {"NO_ERROR", "INVALID_SERVICE", "UNKNOWN_REQUEST", "INVALID_PIN", "MODE_UNAVAILABLE", "INVALID_MODE", "WRONG_MODE", "INVALID_DEVICE_NUMBER", "DEVICE_NOT_AVAILABLE", "I2C NOT ENABLED"};
  
 asipClass:: asipClass(){
   
@@ -38,7 +38,7 @@ void asipClass::begin(Stream *s, int svcCount, asipServiceClass **serviceArray, 
   s->write(DEBUG_MSG_HEADER);
   s->print(sketchName);  
   // list all implemented service tags
-  s->print(" running on an ");
+  s->print(" running on ");
   s->print(CHIP_NAME);
   s->print(" with Services: ");
   
@@ -211,10 +211,14 @@ void asipClass::sendErrorMessage( const char svc, const char tag, asipErr_t errn
 
 void asipClass::startI2C()
 {
+#if defined USE_I2C
   if(I2C_Started == false) {  
      Wire.begin();
      I2C_Started = true;
   }
+#else
+  sendErrorMessage(SYSTEM_MSG_HEADER,SYSTEM_MSG_HEADER,ERR_I2C_NOT_ENABLED, serial);
+#endif  
 }
 
 

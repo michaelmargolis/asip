@@ -14,7 +14,7 @@
 #include <MPU6050.h>  // the gyro/accelerometer chip library
 #include <HMC5883L.h> // magnetometer chip library
 
-
+#if defined USE_IMU
 MPU6050 accelgyro;  // the MPU6050 supports accelerometer and gyro
 HMC5883L mag;
 
@@ -148,7 +148,7 @@ void HeadingClass::processRequestMsg(Stream *stream)
      reportError(ServiceId, request, ERR_UNKNOWN_REQUEST, stream);
    }
 }
-
+#endif
 
 
 

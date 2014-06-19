@@ -13,7 +13,9 @@
 
 #include "Boards.h"  // Hardware pin macros
 #include "Arduino.h"
+#if defined USE_I2C
 #include "Wire.h"  // for I2C services
+#endif
 
 #define PRINTF_DEBUG
 #define VERBOSE_DEBUG(X) //X  // uncomment x to enable verbose debug
@@ -41,7 +43,7 @@ const char ERROR_MSG_HEADER    = '~';  // error messages begin with this tag
 const char DEBUG_MSG_HEADER    = '!';  // debug messages begin with this tag
 
 // error messages
-enum asipErr_t {ERR_NO_ERROR, ERR_INVALID_SERVICE, ERR_UNKNOWN_REQUEST, ERR_INVALID_PIN, ERR_MODE_UNAVAILABLE, ERR_INVALID_MODE, ERR_WRONG_MODE, ERR_INVALID_DEVICE_NUMBER, ERR_DEVICE_NOT_AVAILABLE};
+enum asipErr_t {ERR_NO_ERROR, ERR_INVALID_SERVICE, ERR_UNKNOWN_REQUEST, ERR_INVALID_PIN, ERR_MODE_UNAVAILABLE, ERR_INVALID_MODE, ERR_WRONG_MODE, ERR_INVALID_DEVICE_NUMBER, ERR_DEVICE_NOT_AVAILABLE, ERR_I2C_NOT_ENABLED};
 
 const byte MIN_MSG_LEN = 4;  // valid request messages must be at least this many characters
 

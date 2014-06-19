@@ -10,10 +10,10 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-
 #ifndef ASIP_IMU_h
 #define ASIP_IMU_h
 
+#if defined USE_IMU
 #include "asip.h"
 
 #include <Wire.h>
@@ -121,7 +121,7 @@ extern HeadingClass heading3Axis;
 extern PressureClass pressure;
 
 #endif
- 
+#endif 
    
 
 
