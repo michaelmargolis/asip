@@ -1,5 +1,4 @@
-#define USE_IMU
-#define USE_I2C  // Needed before asip.h if using I2C
+//#define USE_I2C  // Needed before asip.h if using I2C
 
 #include <asip.h>       // the base class definitions
 #include <asipIO.h>     // the core I/O class definition

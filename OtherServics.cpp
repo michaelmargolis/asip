@@ -25,10 +25,15 @@ servoClass::servoClass(const char svcId, const char evtId)
  void servoClass::begin(byte nbrElements, byte pinCount, const pinArray_t pins[])
 {
   asipServiceClass::begin(nbrElements,pinCount,pins);
-  for(int i=0; i < nbrElements; i++) {     
-     myServos[i].attach(pins[i]);
-	 printf("Attaching servo id %d to pin %d\n", i, pins[i]);
+  if(pinCount <= NBR_SERVOS) { 
+    for(int i=0; i < nbrElements; i++) {     
+       myServos[i].attach(pins[i]);
+	   printf("Attaching servo id %d to pin %d\n", i, pins[i]);
+    }
   } 
+  else {
+     printf("Not enough servos\n");
+  }
 }
 
 void servoClass::reportValue(int sequenceId, Stream * stream)  // send the value of the given device
@@ -47,6 +52,30 @@ void servoClass::write(byte servoId, byte angle)
        angle = constrain(angle,0,180);
        myServos[servoId].write(angle);
 	   printf("Servo id %d on pin %d moving to %d degrees\n", servoId, pins[servoId], angle);
+   }
+}
+   
+// this function rewrites the pins used by this service   
+void servoClass::remapPins(Stream *stream)
+{
+static pinArray_t newPins[NBR_SERVOS]; // pin map request
+
+   int count = stream->parseInt();
+   if( count == pinCount && count <= NBR_SERVOS) {
+       for(int i=0; i < count; i++){
+	       newPins[i] = stream->parseInt();	
+		   // todo - add a check here for pin within range and not reserved
+	    }		  
+		// if all pins are valid then detach the old pins and attach the new
+		for(int i=0; i < count; i++){
+	      myServos[i].detach();	 
+          asip.registerPinMode(pins[i], UNALLOCATED_PIN_MODE); // deregister the pin old
+		  myServos[i].attach(newPins[i]);	 
+		  asip.registerPinMode(newPins[i], OTHER_SERVICE_MODE); // register the new pin
+	    }	   
+   }
+   else {
+     // error message
    }
 }
    
@@ -70,8 +99,10 @@ void servoClass::processRequestMsg(Stream *stream)
           write(servoId, angle);		 
         }				
      }
-
    } 
+   else if( request == REMAP_PIN_REQUEST) {
+       remapPins(stream);
+   }
    else {
       reportError(ServiceId, request, ERR_UNKNOWN_REQUEST, stream);
    }   
@@ -81,11 +112,26 @@ distanceSensorClass distanceSensor(DISTANCE_SERVICE, DISTANCE_EVENT);
 
 distanceSensorClass::distanceSensorClass(const char svcId, const char evtId) : asipServiceClass(svcId,evtId){}
 
-// each sensor uses 1 pins
+// each sensor uses 1 pin
 void distanceSensorClass::begin(byte nbrElements, byte pinCount, const pinArray_t pins[])
 {
   asipServiceClass::begin(nbrElements,pinCount,pins);
 
+}
+
+// this function rewrites the pins used by this service   
+void distanceSensorClass::remapPins(Stream *stream)
+{
+
+   int count = stream->parseInt();
+   if( count == pinCount && count <= NBR_SERVOS) {
+       for(int i=0; i < count; i++){
+	   // todo 
+       }	      
+   }
+   else {
+     // error message
+   }
 }
 
  void distanceSensorClass::reportValue(int sequenceId, Stream * stream)  // send the value of the given device

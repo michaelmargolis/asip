@@ -126,7 +126,7 @@ void encoderClass::reportValues(Stream *stream)
 void encoderClass::processRequestMsg(Stream *stream)
 {
    int request = stream->read();
-   if(request == ENCODER_REQUEST) {
+   if(request == AUTOEVENT_REQUEST) {
      setAutoreport(stream);
    }
    else {
@@ -158,7 +158,7 @@ void bumpSensorClass::bumpSensorClass::begin(byte nbrElements, byte pinCount, co
 void bumpSensorClass::processRequestMsg(Stream *stream)
 {
    int request = stream->read();
-   if(request == BUMP_REQUEST) {
+   if(request == AUTOEVENT_REQUEST) {
       setAutoreport(stream);
    }
    else {
@@ -201,7 +201,7 @@ void irLineSensorClass::reportValue(int sequenceId, Stream * stream)  // send th
 void irLineSensorClass::processRequestMsg(Stream *stream)
 {
    int request = stream->read();
-   if(request == IR_LINE_REQUEST) {
+   if(request == AUTOEVENT_REQUEST) {
       setAutoreport(stream);
    }
    else {

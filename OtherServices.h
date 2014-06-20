@@ -44,6 +44,7 @@ public:
    void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device
    void processRequestMsg(Stream *stream);
+   void remapPins(Stream *stream);
 private:
    int getDistance(int sequenceId);
  };
@@ -55,9 +56,10 @@ public:
    void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);
    void reportValues(Stream * stream);
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device   
-   void processRequestMsg(Stream *stream);
+   void processRequestMsg(Stream *stream);      
 private: 
    void write(byte servoId, byte angle);
+   void remapPins(Stream *stream);
 };   
    
 extern distanceSensorClass distanceSensor;

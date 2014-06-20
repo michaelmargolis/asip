@@ -42,6 +42,14 @@ const char EVENT_HEADER        = '@';  // event messages are preceded with this 
 const char ERROR_MSG_HEADER    = '~';  // error messages begin with this tag
 const char DEBUG_MSG_HEADER    = '!';  // debug messages begin with this tag
 
+// tags available all services (avoid these constants when creating service specific tags)
+// request tags
+const char AUTOEVENT_REQUEST = 'A';  // this tag sets autoevent status
+const char REMAP_PIN_REQUEST = 'R';  // for services that can change pin numbers
+// Reply tags common to all services
+const char SERVICE_EVENT     = 'e';  //  
+
+
 // error messages
 enum asipErr_t {ERR_NO_ERROR, ERR_INVALID_SERVICE, ERR_UNKNOWN_REQUEST, ERR_INVALID_PIN, ERR_MODE_UNAVAILABLE, ERR_INVALID_MODE, ERR_WRONG_MODE, ERR_INVALID_DEVICE_NUMBER, ERR_DEVICE_NOT_AVAILABLE, ERR_I2C_NOT_ENABLED};
 

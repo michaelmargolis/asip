@@ -26,23 +26,20 @@ const char STOP_MOTORS   = 'S';
 
 // Encoder service
 const char ENCODER_SERVICE = 'E';
-// Encoder methods
-const char ENCODER_REQUEST = 'R';
+// Encoder methods - use system define, AUTOEVENT_REQUEST ('A') to request autoevents
 // Encoder events
 const char ENCODER_EVENT   = 'e';
 
 
 // Bump detect service
 const char BUMP_SERVICE = 'B';
-// Encoder methods
-const char BUMP_REQUEST = 'R';
+// Encoder methods - use system define, AUTOEVENT_REQUEST ('A') to request autoevents
 // Encoder events
 const char BUMP_EVENT  =  'e';
 
 // IR Line detect service
 const char IR_REFLECTANCE_SERVICE = 'R';
-// Encoder methods
-const char  IR_LINE_REQUEST = 'R';
+// Encoder methods - use system define, AUTOEVENT_REQUEST ('A') to request autoevents
 // Encoder events
 const char IR_LINE_EVENT   = 'e';
 

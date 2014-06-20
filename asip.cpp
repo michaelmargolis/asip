@@ -276,7 +276,7 @@ void asipServiceClass::setAutoreport(Stream *stream) // reads stream for number 
   autoInterval = ticks;
   unsigned int currentTick = millis(); // truncate to a 16 bit value
   nextTrigger = currentTick + autoInterval; // set the next trigger tick count
-    printf("auto report set to %u for service %d\n",ticks, ServiceId);
+    printf("auto report set to %u for service %c\n",ticks, ServiceId);
 }
 
 void asipServiceClass::reportError( const char svc, const char request, asipErr_t errno, Stream *stream)
