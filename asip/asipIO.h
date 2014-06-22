@@ -18,21 +18,22 @@ const unsigned int DEFAULT_ANALOG_EVENT_INTERVAL = 20; // not yet used
 const byte MAX_ANALOG_INPUTS = min(NUM_ANALOG_INPUTS, sizeof(unsigned int) *8); // the size of the port mask variable
    
 //Core IO service
-const char IO_SERVICE    = 'I';   // tag indicating message is for the low level I/O layer
+const char id_IO_SERVICE    = 'I';   // tag indicating message is for the low level I/O layer
 // IO Methods (messages to Arduino)
-const char PIN_MODE      = 'P';   // i/o request  to Arduino to set pin mode
-const char DIGITAL_WRITE = 'D';   // i/o request  to Arduino is digitalWrite
-const char ANALOG_WRITE  = 'A';   // i/o request to Arduino is analogWrite)
+const char tag_PIN_MODE      = 'P';   // i/o request  to Arduino to set pin mode
+const char tag_DIGITAL_WRITE = 'D';   // i/o request  to Arduino is digitalWrite
+const char tag_ANALOG_WRITE  = 'A';   // i/o request to Arduino is analogWrite)
 // info requests to Arduino
-const char ANALOG_DATA_REQUEST     = 'R'; // request analog data events
-const char GET_PORT_TO_PIN_MAPPING = 'M'; // gets a list of pins associated with ports 
-const char GET_PIN_MODES           = 'p'; // gets a list of pin modes
+const char tag_ANALOG_DATA_REQUEST     = 'R'; // request analog data events
+const char tag_GET_PORT_TO_PIN_MAPPING = 'M'; // gets a list of pins associated with ports 
+const char tag_GET_PIN_MODES           = 'p'; // gets a list of pin modes
+
  
 void sendDigitalPortChanges(Stream * stream); // function to send changed digital port data
 
 // IO events (messages from Arduino)
-const char PORT_DATA     = 'p';   //  i/o event from Arduino is data on a digital port
-const char ANALOG_VALUE  = 'a';   //  i/o event from Arduinois value of an analog pin
+const char tag_PORT_DATA     = 'p';   //  i/o event from Arduino is data on a digital port
+const char tag_ANALOG_VALUE  = 'a';   //  i/o event from Arduinois value of an analog pin
 
 // this class derives from the service class but has direct access to all pins
 class asipIOClass : public asipServiceClass

@@ -21,7 +21,7 @@ byte getPortIndex(byte pin); // return index into portRegisterTable associated w
 void reportDigitalPins( byte pin, boolean report); //set or clear flag indicating reporting of this digital input
 void checkPinChange();
 
-asipIOClass asipIO(IO_SERVICE,ANALOG_VALUE); 
+asipIOClass asipIO(id_IO_SERVICE,tag_ANALOG_VALUE); 
 
 
   asipIOClass::asipIOClass(const char svcId, const char evtId)
@@ -54,7 +54,7 @@ void asipIOClass::reportValue(int sequenceId, Stream * stream)  // send the valu
     stream->write(EVENT_HEADER);
     stream->write(ServiceId);
     stream->write(',');
-    stream->write(ANALOG_VALUE);
+    stream->write(tag_ANALOG_VALUE);
     stream->write(',');
     stream->print(nbrActiveAnalogPins);
     stream->write('{');
@@ -78,36 +78,36 @@ void asipIOClass::processRequestMsg(Stream *stream)
    char request = stream->read();
    byte pin;
    int value;  
-   if( request == PIN_MODE || request == DIGITAL_WRITE || request == ANALOG_WRITE) {
+   if( request == tag_PIN_MODE || request == tag_DIGITAL_WRITE || request == tag_ANALOG_WRITE) {
      pin = stream->parseInt();
      value = stream->parseInt();
      VERBOSE_DEBUG( printf("Request %d for pin %d with val=%d\n", request, pin,value);)
    }
    asipErr_t err = ERR_NO_ERROR;   
    switch(request) {
-      case ANALOG_DATA_REQUEST:
+      case tag_ANALOG_DATA_REQUEST:  
           setAutoreport(stream);       
           break;
-      case GET_PORT_TO_PIN_MAPPING:
+      case tag_GET_PORT_TO_PIN_MAPPING:
           asip.sendPinMap();
           break;
-      case GET_PIN_MODES:
+      case tag_GET_PIN_MODES:
           asip.sendPinModes();
           break;
-      case PIN_MODE:
+      case tag_PIN_MODE:
           err = PinMode(pin, value);      
           break;
-      case DIGITAL_WRITE:
+      case tag_DIGITAL_WRITE:
          err = DigitalWrite(pin,value);         
          break; 
-      case ANALOG_WRITE:
+      case tag_ANALOG_WRITE:
          err = AnalogWrite(pin,value);      
          break;
       default:
          err = ERR_UNKNOWN_REQUEST;       
    }
    if( err != ERR_NO_ERROR){
-       asip.sendErrorMessage(IO_SERVICE, request, err, stream);
+       asip.sendErrorMessage(id_IO_SERVICE, request, err, stream);
    }
 }
 
@@ -315,9 +315,9 @@ void sendDigitalPortChanges(Stream * stream)
          byte data = *portInputRegister(port) & reportPinMasks[i];
          if( data != previousPINs[i]) {            
             stream->write(EVENT_HEADER);
-            stream->write(IO_SERVICE);
+            stream->write(id_IO_SERVICE);
             stream->write(',');
-            stream->write(PORT_DATA);
+            stream->write(tag_PORT_DATA);
             stream->write(',');
             stream->print(port);
             stream->write(',');

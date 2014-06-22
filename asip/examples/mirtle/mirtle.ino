@@ -1,9 +1,9 @@
 
 #include <asip.h>       // the base class definitions
 #include <asipIO.h>     // the core I/O class definition
-#include <robot.h>       // derived definitions for mirtle services(motor, ir, encoder etc) 
-#include <HUBeeWheel.h>
-#include <OtherServices.h> // derived definitions for other services (distance and servo) 
+#include "utility\robot.h"       // definitions for mirtle services(motor, ir, encoder etc) 
+#include "utility\HUBeeWheel.h"
+#include "utility\OtherServices.h" // definitions for other services (distance and servo) 
 
 #include <Servo.h> // needed for the servo service 
 
@@ -20,6 +20,15 @@ const pinArray_t irReflectancePins[] = {14,15,16,17}; // first is control, the r
 const pinArray_t servoPins[] = {18};     // analog pin 4
 const pinArray_t distancePins[] = {19};  // analog pin 5 
 
+// create the services
+robotMotorClass motors(id_MOTOR_SERVICE, NO_EVENT);
+encoderClass encoders(id_ENCODER_SERVICE);
+bumpSensorClass bumpSensors(id_BUMP_SERVICE);
+irLineSensorClass irLineSensors(id_IR_REFLECTANCE_SERVICE);
+servoClass servos(id_SERVO_SERVICE, NO_EVENT);
+distanceSensorClass distanceSensor(id_DISTANCE_SERVICE);
+
+// make a list of the created services
 asipServiceClass *services[] = { 
                                  &asipIO, // the core class for pin level I/O
                                  &motors,
@@ -39,6 +48,7 @@ void setup() {
   asipIO.begin(); 
   asip.registerPinMode(0,RESERVED_MODE);  // block the serial pins from being allocated
   asip.registerPinMode(1,RESERVED_MODE);
+  // start the services
   motors.begin(2,6,motorPins); // two motors that use a total of 6 pins  
   encoders.begin(2,4,encoderPins); // two encoders that use a total of 4 pins 
   bumpSensors.begin(2,2,bumpPins);

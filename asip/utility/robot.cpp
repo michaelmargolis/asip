@@ -14,9 +14,6 @@
 //declare two wheel objects - each encapsulates all the control functions for a wheel
 HUBeeBMDWheel wheel[NBR_WHEELS];
 
-
-robotMotorClass motors(MOTOR_SERVICE, NO_EVENT);
-
 robotMotorClass::robotMotorClass(const char svcId, const char evtId)
   :asipServiceClass(svcId,evtId)
 {}
@@ -81,24 +78,22 @@ void robotMotorClass::processRequestMsg(Stream *stream)
    int arg0, arg1; 
    int request = stream->read();
    // parse the correct number of arguments for each method 
-   if( request == SET_MOTOR || request == SET_MOTORS || request == STOP_MOTOR) {
+   if( request == tag_SET_MOTOR || request == tag_SET_MOTORS || request == tag_STOP_MOTOR) {
       arg0 = stream->parseInt();  
-      if( request != STOP_MOTOR) {
+      if( request != tag_STOP_MOTOR) {
          arg1 = stream->parseInt();  
       }
    }   
    switch(request) {
-      case SET_MOTOR:   setMotor(arg0,arg1);  break;
-      case SET_MOTORS:  setMotors(arg0,arg1);break; // TODO this assumes only two motors
-      case STOP_MOTOR:  stopMotor(arg0); break;
-      case STOP_MOTORS: stopMotors(); break; 
+      case tag_SET_MOTOR:   setMotor(arg0,arg1);  break;
+      case tag_SET_MOTORS:  setMotors(arg0,arg1);break; // TODO this assumes only two motors
+      case tag_STOP_MOTOR:  stopMotor(arg0); break;
+      case tag_STOP_MOTORS: stopMotors(); break; 
       default: reportError(ServiceId, request, ERR_UNKNOWN_REQUEST, stream);
    }
 }
 
-encoderClass encoders(ENCODER_SERVICE,ENCODER_EVENT);
-
-encoderClass::encoderClass(const char svcId, const char evtId) : asipServiceClass(svcId,evtId){}
+encoderClass::encoderClass(const char svcId) : asipServiceClass(svcId){}
 
 // each encoder uses 2 pins
 void encoderClass::begin(byte nbrElements, byte pinCount, const pinArray_t pins[])
@@ -126,7 +121,7 @@ void encoderClass::reportValues(Stream *stream)
 void encoderClass::processRequestMsg(Stream *stream)
 {
    int request = stream->read();
-   if(request == AUTOEVENT_REQUEST) {
+   if(request == tag_AUTOEVENT_REQUEST) {
      setAutoreport(stream);
    }
    else {
@@ -134,9 +129,7 @@ void encoderClass::processRequestMsg(Stream *stream)
    }
 }
 
-bumpSensorClass bumpSensors(BUMP_SERVICE, BUMP_EVENT);
-
-bumpSensorClass::bumpSensorClass(const char svcId, const char evtId) : asipServiceClass(svcId,evtId){}
+bumpSensorClass::bumpSensorClass(const char svcId) : asipServiceClass(svcId){}
 
 void bumpSensorClass::bumpSensorClass::begin(byte nbrElements, byte pinCount, const pinArray_t pins[])
 { 
@@ -158,7 +151,7 @@ void bumpSensorClass::bumpSensorClass::begin(byte nbrElements, byte pinCount, co
 void bumpSensorClass::processRequestMsg(Stream *stream)
 {
    int request = stream->read();
-   if(request == AUTOEVENT_REQUEST) {
+   if(request == tag_AUTOEVENT_REQUEST) {
       setAutoreport(stream);
    }
    else {
@@ -166,10 +159,7 @@ void bumpSensorClass::processRequestMsg(Stream *stream)
    }
 }
 
-
-irLineSensorClass irLineSensors(IR_REFLECTANCE_SERVICE,IR_LINE_EVENT);  // create an instance
-
-irLineSensorClass::irLineSensorClass(const char svcId, const char evtId) : asipServiceClass(svcId,evtId){}
+irLineSensorClass::irLineSensorClass(const char svcId) : asipServiceClass(svcId){}
 
 void irLineSensorClass::begin(byte nbrElements, byte pinCount, const pinArray_t pins[]) 
 {
@@ -201,7 +191,7 @@ void irLineSensorClass::reportValue(int sequenceId, Stream * stream)  // send th
 void irLineSensorClass::processRequestMsg(Stream *stream)
 {
    int request = stream->read();
-   if(request == AUTOEVENT_REQUEST) {
+   if(request == tag_AUTOEVENT_REQUEST) {
       setAutoreport(stream);
    }
    else {

@@ -32,7 +32,7 @@ void asipClass::begin(Stream *s, int svcCount, asipServiceClass **serviceArray, 
   autoEventTickDuration = 1; // one millisecond between event counter ticks (TODO?)
   // set all pins to UNALLOCATED_PIN state
   for(byte p=0; p < NUM_DIGITAL_PINS; p++) {
-     pinModes[p] = UNALLOCATED_PIN_MODE;
+     setPinMode(p, UNALLOCATED_PIN_MODE);
   }
    programName = sketchName;
   s->write(DEBUG_MSG_HEADER);
@@ -100,11 +100,11 @@ void asipClass::service()
 void asipClass::processSystemMsg()
 {
    int request = serial->read();
-   if(request == SYSTEM_GET_INFO) {
+   if(request == tag_SYSTEM_GET_INFO) {
       serial->write(EVENT_HEADER);   
       serial->write(SYSTEM_MSG_HEADER);
       serial->write(',');
-      serial->write(SYSTEM_GET_INFO);
+      serial->write(tag_SYSTEM_GET_INFO);
       serial->write(',');
       serial->print(ASIP_MAJOR_VERSION);
       serial->write(',');
@@ -126,8 +126,8 @@ asipErr_t asipClass::registerPinMode(byte pin, pinMode_t mode)
   // Serial.print("PIN in reg =") ; Serial.println(pin);    
   if(pin >= 0 && pin < NUM_DIGITAL_PINS) {     
   // Serial.print("mode in reg =") ; Serial.println(pinModes[pin]); 
-    if( pinModes[pin] != RESERVED_MODE && pinModes[pin] != OTHER_SERVICE_MODE) {    
-      pinModes[pin] = mode;  
+    if( getPinMode(pin) != RESERVED_MODE && getPinMode(pin) != OTHER_SERVICE_MODE) {    
+      setPinMode(pin,mode);  
       //Serial.print("register ");Serial.print(pin); Serial.print(" for mode "); Serial.println(mode);         
     }
     else {
@@ -140,6 +140,14 @@ asipErr_t asipClass::registerPinMode(byte pin, pinMode_t mode)
   return err;
 }
 
+// Sets the mode of the given pin 
+void asipClass::setPinMode(byte pin, pinMode_t mode) 
+{
+  if( pin >=0 && pin < NUM_DIGITAL_PINS) {
+    pinModes[pin] = mode;
+  } 
+}
+
 // returns them mode of the given pin 
 pinMode_t asipClass::getPinMode(byte pin) 
 {
@@ -148,19 +156,19 @@ pinMode_t asipClass::getPinMode(byte pin)
   }
   else {
     return INVALID_MODE;
-  }
- 
+  } 
 }
 
  
 void asipClass::sendPinModes()  // sends a list of all pin modes
 {
   serial->write(EVENT_HEADER);
-  serial->write(IO_SERVICE);
+  serial->write(id_IO_SERVICE);
   serial->write(',');
-  serial->write(GET_PIN_MODES);
+  serial->write(tag_GET_PIN_MODES);
   serial->write(',');
   serial->print(NUM_DIGITAL_PINS);
+  serial->write(',');  // comma added 21 June 2014
   serial->write('{');
   for(byte p=0; p < NUM_DIGITAL_PINS; p++) {
      int mode = (char)pinModes[p]; // print values  > 127 as negative numbers
@@ -176,11 +184,12 @@ void asipClass::sendPinMap()
 {
   // note that port numbers do not start at 0 and may not be consecutive
   serial->write(EVENT_HEADER);
-  serial->write(IO_SERVICE);
+  serial->write(id_IO_SERVICE);
   serial->write(',');
-  serial->write(GET_PORT_TO_PIN_MAPPING);
+  serial->write(tag_GET_PORT_TO_PIN_MAPPING);
   serial->write(',');
   serial->print(NUM_DIGITAL_PINS);
+  serial->write(',');  // comma added 21 June 2014
   serial->write('{');
   for(byte p=0; p < NUM_DIGITAL_PINS; p++) {
      byte port = digitalPinToPort(p);
@@ -209,26 +218,16 @@ void asipClass::sendErrorMessage( const char svc, const char tag, asipErr_t errn
   
 } 
 
-void asipClass::startI2C()
-{
-#if defined USE_I2C
-  if(I2C_Started == false) {  
-     Wire.begin();
-     I2C_Started = true;
-  }
-#else
-  sendErrorMessage(SYSTEM_MSG_HEADER,SYSTEM_MSG_HEADER,ERR_I2C_NOT_ENABLED, serial);
-#endif  
-}
-
-
 asipClass asip;
-
 
 asipServiceClass::asipServiceClass(const char svcId, const char evtId) :
    ServiceId(svcId), EventId(evtId) 
 {
+}
 
+asipServiceClass::asipServiceClass(const char svcId) :
+   ServiceId(svcId), EventId(tag_SERVICE_EVENT) 
+{
 }
 
 void asipServiceClass::begin(byte _nbrElements, byte _pinCount, const pinArray_t _pins[])
@@ -243,16 +242,18 @@ void asipServiceClass::begin(byte _nbrElements, byte _pinCount, const pinArray_t
   //printf(%d, svc begin\n",ServiceId);
 }
 
-void asipServiceClass::begin(byte _nbrElements) // begin with no pins starts an I2C service
+void asipServiceClass::begin(byte _nbrElements, serviceBeginCallback_t serviceBeginCallback) // begin with no pins starts an I2C service
 {
   nbrElements =  _nbrElements;
   autoInterval = 0; // turn off auto events
-  asip.startI2C();
+  if(serviceBeginCallback != NULL) {
+    if( serviceBeginCallback(ServiceId) == false) {
+	   // service failed to start
+	}	
+  }  
 }
 
 asipServiceClass::~asipServiceClass(){} 
-
- 
 
 void asipServiceClass::reportValues(Stream *stream) 
 {

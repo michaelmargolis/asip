@@ -15,8 +15,6 @@ const byte NBR_SERVOS = 1;
 Servo myServos[NBR_SERVOS];  // create one servo object
 
 
-servoClass servos(SERVO_SERVICE, NO_EVENT);
-
 servoClass::servoClass(const char svcId, const char evtId)
   :asipServiceClass(svcId,evtId)
 {}
@@ -83,7 +81,7 @@ void servoClass::processRequestMsg(Stream *stream)
 {
    int request = stream->read();
    int angle;
-   if(request == SERVO_WRITE) {
+   if(request == tag_SERVO_WRITE) {
      int servoId = 0;  
 	 if(NBR_SERVOS == 0) {
        reportError(ServiceId, request, ERR_DEVICE_NOT_AVAILABLE, stream);
@@ -100,7 +98,7 @@ void servoClass::processRequestMsg(Stream *stream)
         }				
      }
    } 
-   else if( request == REMAP_PIN_REQUEST) {
+   else if( request == tag_REMAP_PIN_REQUEST) {
        remapPins(stream);
    }
    else {
@@ -108,9 +106,7 @@ void servoClass::processRequestMsg(Stream *stream)
    }   
 }
 
-distanceSensorClass distanceSensor(DISTANCE_SERVICE, DISTANCE_EVENT);
-
-distanceSensorClass::distanceSensorClass(const char svcId, const char evtId) : asipServiceClass(svcId,evtId){}
+distanceSensorClass::distanceSensorClass(const char svcId) : asipServiceClass(svcId){}
 
 // each sensor uses 1 pin
 void distanceSensorClass::begin(byte nbrElements, byte pinCount, const pinArray_t pins[])
@@ -144,10 +140,10 @@ void distanceSensorClass::remapPins(Stream *stream)
 void distanceSensorClass::processRequestMsg(Stream *stream)
 {
    int request = stream->read();
-   if( request == DISTANCE_REQUEST) {
+   if( request == tag_AUTOEVENT_REQUEST) {
       setAutoreport(stream);
    }
-   else if(request == DISTANCE_MEASURE){ 
+   else if(request == tag_DISTANCE_MEASURE){ 
       reportValues(stream);  // send a single measurement
    }
       

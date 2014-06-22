@@ -23,24 +23,23 @@
 //IDs already used by the core mirtle services:  I,M,E,B,R
 
 // Distance detect service
-const char DISTANCE_SERVICE = 'D';
+const char id_DISTANCE_SERVICE = 'D';
 // methods
-const char  DISTANCE_REQUEST = 'R';   // enable auto events
-const char  DISTANCE_MEASURE = 'M';   // measure and send a single event 
-// events
-const char  DISTANCE_EVENT =   'e';
+// enable auto events - use system define, AUTOEVENT_REQUEST ('A') to request autoevents
+const char  tag_DISTANCE_MEASURE = 'M';   // measure and send a single event 
+// events use system tag: SERVICE_EVENT  ('e')
 
 // Servo service
-const char SERVO_SERVICE = 'S';
+const char id_SERVO_SERVICE = 'S';
 // methods
-const char SERVO_WRITE = 'W';
+const char tag_SERVO_WRITE = 'W';
 
 
 class distanceSensorClass : public asipServiceClass
 {  
 public:
 
-   distanceSensorClass(const char svcId, const char evtId);  
+   distanceSensorClass(const char svcId);  
    void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device
    void processRequestMsg(Stream *stream);

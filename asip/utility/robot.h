@@ -17,31 +17,29 @@
 // Method and event IDs must be unique within a service
 
 // Motor service
-const char MOTOR_SERVICE = 'M';
+const char id_MOTOR_SERVICE = 'M';
 // Motor methods (messages to Arduino)
-const char SET_MOTOR     = 'm';  
-const char SET_MOTORS    = 'M';
-const char STOP_MOTOR    = 's';  
-const char STOP_MOTORS   = 'S';
+const char tag_SET_MOTOR     = 'm';  
+const char tag_SET_MOTORS    = 'M';
+const char tag_STOP_MOTOR    = 's';  
+const char tag_STOP_MOTORS   = 'S';
 
 // Encoder service
-const char ENCODER_SERVICE = 'E';
-// Encoder methods - use system define, AUTOEVENT_REQUEST ('A') to request autoevents
-// Encoder events
-const char ENCODER_EVENT   = 'e';
+const char id_ENCODER_SERVICE = 'E';
+// Encoder methods - use system define, tag_AUTOEVENT_REQUEST ('A') to request autoevents
+// Encoder events -  events use system tag: tag_SERVICE_EVENT  ('e')
 
 
 // Bump detect service
-const char BUMP_SERVICE = 'B';
-// Encoder methods - use system define, AUTOEVENT_REQUEST ('A') to request autoevents
-// Encoder events
-const char BUMP_EVENT  =  'e';
+const char id_BUMP_SERVICE = 'B';
+// Bump sensor methods - use system define, tag_AUTOEVENT_REQUEST ('A') to request autoevents
+// Bump Sensor events -  events use system tag: tag_SERVICE_EVENT  ('e')
+
 
 // IR Line detect service
-const char IR_REFLECTANCE_SERVICE = 'R';
-// Encoder methods - use system define, AUTOEVENT_REQUEST ('A') to request autoevents
-// Encoder events
-const char IR_LINE_EVENT   = 'e';
+const char id_IR_REFLECTANCE_SERVICE = 'R';
+// IR Line detect methods - use system define, tag_AUTOEVENT_REQUEST ('A') to request autoevents
+// IR Line detect events -  events use system tag: tag_SERVICE_EVENT  ('e')
 
 
 const int NBR_WHEELS = 2;  // defines the number of wheels (and encoders), note not tested with values other than 2
@@ -64,7 +62,7 @@ public:
 class encoderClass : public asipServiceClass
 {  
 public:
-   encoderClass(const char svcId, const char evtId);
+   encoderClass(const char svcId);
    void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);
    void reportValues(Stream * stream);
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device   
@@ -78,7 +76,7 @@ private:
 class bumpSensorClass : public asipServiceClass
 {  
 public:
-   bumpSensorClass(const char svcId, const char evtId);
+   bumpSensorClass(const char svcId);
    void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device
    void processRequestMsg(Stream *stream);
@@ -87,7 +85,7 @@ public:
 class irLineSensorClass : public asipServiceClass
 {  
 public:
-   irLineSensorClass(const char svcId, const char evtId);
+   irLineSensorClass(const char svcId);
    void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);
    void reportValues(Stream *stream);
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device
@@ -95,10 +93,6 @@ public:
 };    
 
 
-extern robotMotorClass motors;
-extern encoderClass encoders;
-extern bumpSensorClass bumpSensors;
-extern irLineSensorClass irLineSensors;
 #endif
  
    
