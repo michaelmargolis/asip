@@ -3,8 +3,8 @@
 #include <asipIO.h>     // the core I/O class definition
 #include "utility\robot.h"       // definitions for mirtle services(motor, ir, encoder etc) 
 #include "utility\HUBeeWheel.h"
-#include "utility\OtherServices.h" // definitions for other services (distance and servo) 
-
+#include <utility\asipDistance.h> // ultrasonics distance sensor
+#include <utility\asipServos.h> // derived definitions for servo
 #include <Servo.h> // needed for the servo service 
 
 char * sketchName = "Mirtle";
@@ -17,16 +17,24 @@ const pinArray_t bumpPins[] = {6,5};
 // note that analog pins are referred to by their digital number (on uno, 15 = analog 1, 16 =analog 2...)
 const pinArray_t irReflectancePins[] = {14,15,16,17}; // first is control, the remainder are used as analog inputs
 
+//declare servo object(s) 
+const byte NBR_SERVOS =1;
+Servo myServos[NBR_SERVOS];  // create servo objects
+
 const pinArray_t servoPins[] = {18};     // analog pin 4
+extern const pinArray_t servoPins[NBR_SERVOS]; //this declaration tests for correct nbr of pin initializers
+
+const byte NBR_DISTANCE_SENSORS = 1;
 const pinArray_t distancePins[] = {19};  // analog pin 5 
+extern const pinArray_t distancePins[NBR_DISTANCE_SENSORS]; //this declaration tests for correct nbr of pin initializers
 
 // create the services
 robotMotorClass motors(id_MOTOR_SERVICE, NO_EVENT);
 encoderClass encoders(id_ENCODER_SERVICE);
 bumpSensorClass bumpSensors(id_BUMP_SERVICE);
 irLineSensorClass irLineSensors(id_IR_REFLECTANCE_SERVICE);
-servoClass servos(id_SERVO_SERVICE, NO_EVENT);
-distanceSensorClass distanceSensor(id_DISTANCE_SERVICE);
+asipServoClass asipServos(id_SERVO_SERVICE, NO_EVENT);
+asipDistanceClass asipDistance(id_DISTANCE_SERVICE);
 
 // make a list of the created services
 asipServiceClass *services[] = { 
@@ -35,8 +43,8 @@ asipServiceClass *services[] = {
                                  &encoders,
                                  &bumpSensors,
                                  &irLineSensors, 
-                                 &servos,                                 
-                                 &distanceSensor };
+                                 &asipServos,                                 
+                                 &asipDistance };
 
 int nbrServices = sizeof(services) / sizeof(asipServiceClass*);
 
@@ -53,8 +61,8 @@ void setup() {
   encoders.begin(2,4,encoderPins); // two encoders that use a total of 4 pins 
   bumpSensors.begin(2,2,bumpPins);
   irLineSensors.begin(3,4,irReflectancePins); // 3 sensors plus control pin
-  distanceSensor.begin(1,1,distancePins);
-  //servos.begin(1,1,servoPins);
+  asipDistance.begin(NBR_DISTANCE_SENSORS,distancePins); 
+  //asipServos.begin(NBR_SERVOS,servoPins,myServos);
   asip.sendPinModes(); // for debug
   asip.sendPortMap(); 
 }

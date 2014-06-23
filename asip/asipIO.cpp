@@ -12,8 +12,9 @@
 
 #ifdef PRINTF_DEBUG
 // mode strings for debug
-char * modeStr[] = {"UNALLOCATED", "INPUT", "INPUT_PULLUP", "OUTPUT", "ANALOG", "PWM"}; 
-char * modeExtStr[] = {"INVALID","OTHER SERVICE", "RESERVED"};   // add 3 to the index to print these from pinMode_t
+char * modeStr[] = {"UNALLOCATED", "INPUT", "INPUT_PULLUP", "OUTPUT", "ANALOG", "PWM","INVALID","OTHER SERVICE", "RESERVED"}; 
+//char * modeStr[] = {"UNALLOCATED", "INPUT", "INPUT_PULLUP", "OUTPUT", "ANALOG", "PWM"}; 
+//char * modeExtStr[] = {"INVALID","OTHER SERVICE", "RESERVED"};   // add 3 to the index to print these from pinMode_t
 #endif
 
 void AssignPort(byte pin); // store register associated with given pin in register table 
@@ -95,6 +96,9 @@ void asipIOClass::processRequestMsg(Stream *stream)
       case tag_GET_PIN_MODES:
           asip.sendPinModes();
           break;
+	  case tag_GET_PIN_CAPABILITIES:
+           asip.sendPinCapabilites();
+           break;		   
       case tag_PIN_MODE:
           err = PinMode(pin, value);      
           break;
@@ -143,7 +147,8 @@ void asipIOClass::reportDigitalPin(byte pin,boolean report)
  */
 asipErr_t asipIOClass::PinMode(byte pin, int mode)
 {
-  printf("Request pinmode %s (%d) for pin %d\n", mode >=0 ? modeStr[mode] : modeExtStr[mode+3],mode,  pin);
+  //printf("Request pinmode %s (%d) for pin %d\n", mode >=0 ? modeStr[mode] : modeExtStr[mode+3],mode,  pin);
+  printf("Request pinmode %s (%d) for pin %d\n", modeStr[mode],mode,  pin);
   asipErr_t err = ERR_INVALID_MODE;
   if (IS_PIN_ANALOG(pin)) {
     reportAnalogPin(PIN_TO_ANALOG(pin), mode == ANALOG_MODE ); // turn on/off reporting

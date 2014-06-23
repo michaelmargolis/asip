@@ -180,6 +180,29 @@ void asipClass::sendPinModes()  // sends a list of all pin modes
   }
 } 
 
+void asipClass::sendPinCapabilites()  // sends a bitfield array indicating capabilities all pins 
+{
+  serial->write(EVENT_HEADER);
+  serial->write(id_IO_SERVICE);
+  serial->write(',');
+  serial->write(tag_PIN_CAPABILITIES);
+  serial->write(',');
+  serial->print(NUM_DIGITAL_PINS); // for now we assume that total number of pins equals NUM_DIGITAL_PINS
+  serial->write(',');  // comma added 21 June 2014
+  serial->write('{');
+  for(byte p=0; p < NUM_DIGITAL_PINS; p++) {
+     capabilityMask mask;
+	 mask.bits.DIGITAL_IO = 1;; // assume all pins can do digital IO
+	 IS_PIN_ANALOG(p) ? mask.bits.ANALOG_INPUT = 1 :  mask.bits.ANALOG_INPUT = 0;
+	 IS_PIN_PWM(p)    ? mask.bits.PWM_OUTPUT = 1 : mask.bits.PWM_OUTPUT = 0 ;    
+     serial->write( mask.ch + '0'); // convert to a printable character 
+     if( p != NUM_DIGITAL_PINS-1)
+        serial->write(',');
+      else  
+        serial->println("}");
+  }
+} 
+
 void asipClass::sendPortMap()
 {
   // note that port numbers do not start at 0 and may not be consecutive
@@ -242,6 +265,11 @@ void asipServiceClass::begin(byte _nbrElements, byte _pinCount, const pinArray_t
   //printf(%d, svc begin\n",ServiceId);
 }
 
+void asipServiceClass::begin(byte nbrElements, const pinArray_t pins[])
+{
+  begin(nbrElements, nbrElements, pins);
+}
+  
 void asipServiceClass::begin(byte _nbrElements, serviceBeginCallback_t serviceBeginCallback) // begin with no pins starts an I2C service
 {
   nbrElements =  _nbrElements;

@@ -32,8 +32,22 @@ enum asipErr_t {ERR_NO_ERROR, ERR_INVALID_SERVICE, ERR_UNKNOWN_REQUEST, ERR_INVA
 typedef byte pinArray_t; // the type used by services to provide an array of needed pins 
 typedef bool (*serviceBeginCallback_t)(const char svc);   // callback for services such as I2C that don't explicitly use pins
 
-enum pinMode_t {UNALLOCATED_PIN_MODE, INPUT_MODE, INPUT_PULLUP_MODE, OUTPUT_MODE, ANALOG_MODE, PWM_MODE, INVALID_MODE=-3, OTHER_SERVICE_MODE=-2,  RESERVED_MODE=-1};
+enum pinMode_t {UNALLOCATED_PIN_MODE, INPUT_MODE, INPUT_PULLUP_MODE, OUTPUT_MODE, ANALOG_MODE, PWM_MODE, INVALID_MODE, OTHER_SERVICE_MODE,  RESERVED_MODE};
 
+// bit field indicating the capability of pins (see asipIO for usage)
+struct pinCapability_t {
+   byte DIGITAL_IO    : 1;   
+   byte ANALOG_INPUT  : 1;   
+   byte PWM_OUTPUT    : 1;    
+   //byte ANALOG_OUTPUT : 1; //DAC not supported on 8 bit chips
+   };
+
+union capabilityMask
+  {
+    pinCapability_t bits;
+    char ch;
+  } ;   
+   
 //System messages
 // Request messages to Arduino
 const char SYSTEM_MSG_HEADER      = '#';  // system requests are preceded with this tag
@@ -74,6 +88,7 @@ public:
   asipServiceClass(const char svcId); // use default system event tag
   virtual ~asipServiceClass();  
   virtual void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);    
+  virtual void begin(byte nbrElements, const pinArray_t pins[]);  // you can use this terse version when there is one pin per element
   virtual void begin(byte nbrElements, serviceBeginCallback_t serviceBeginCallback); // begin with no pins starts an I2C service
   virtual void reportValue(int sequenceId, Stream * stream)  = 0; // send the value of the given device
   virtual void reportValues(Stream *stream); // send all values separated by commas, preceded by header and terminated with newline
@@ -109,6 +124,7 @@ public:
   void setPinMode(byte pin, pinMode_t mode); 
   void sendPortMap(); 
   void sendPinModes(); 
+  void sendPinCapabilites();
   void sendErrorMessage( const char svc, const char tag, asipErr_t errno, Stream *stream); 
 private:
   //friend class asipServiceClass; 

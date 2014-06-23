@@ -1,5 +1,5 @@
 /*
- * OtherServices.h -  Arduino Services Interface Protocol (ASIP)
+ * asipDistance.h -  Arduino Services Interface Protocol (ASIP)
  * 
  * Copyright (C) 2014 Michael Margolis
  * This library is free software; you can redistribute it and/or
@@ -9,12 +9,10 @@
  */
 
 
-#ifndef OtherServices_h
-#define OtherServices_h
+#ifndef asipDistance_h
+#define asipDistance_h
 
 #include "asip.h"
-
-#include <Servo.h> 
 
 // Service and method defines
 // Service IDs must be unique across all services
@@ -29,40 +27,21 @@ const char id_DISTANCE_SERVICE = 'D';
 const char  tag_DISTANCE_MEASURE = 'M';   // measure and send a single event 
 // events use system tag: SERVICE_EVENT  ('e')
 
-// Servo service
-const char id_SERVO_SERVICE = 'S';
-// methods
-const char tag_SERVO_WRITE = 'W';
 
-
-class distanceSensorClass : public asipServiceClass
+class asipDistanceClass : public asipServiceClass
 {  
 public:
 
-   distanceSensorClass(const char svcId);  
-   void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);
+   asipDistanceClass(const char svcId);  
+   void begin(byte nbrElements, const pinArray_t pins[]);
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device
    void processRequestMsg(Stream *stream);
    void remapPins(Stream *stream);
 private:
    int getDistance(int sequenceId);
  };
-   
-class servoClass : public asipServiceClass
-{  
-public:
-   servoClass(const char svcId, const char evtId);
-   void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);
-   void reportValues(Stream * stream);
-   void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device   
-   void processRequestMsg(Stream *stream);      
-private: 
-   void write(byte servoId, byte angle);
-   void remapPins(Stream *stream);
-};   
-   
-extern distanceSensorClass distanceSensor;
-extern servoClass servos;
+  
+extern asipDistanceClass asipDistance;
 #endif
  
    

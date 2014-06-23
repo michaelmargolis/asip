@@ -27,14 +27,16 @@ const char tag_ANALOG_WRITE  = 'A';   // i/o request to Arduino is analogWrite)
 const char tag_ANALOG_DATA_REQUEST     = 'R'; // request analog data events
 const char tag_GET_PORT_TO_PIN_MAPPING = 'M'; // gets a list of pins associated with ports 
 const char tag_GET_PIN_MODES           = 'p'; // gets a list of pin modes
+const char tag_GET_PIN_CAPABILITIES    = 'c'; // gets a bitfield array indicating pin capabilities
 // IO events (messages from Arduino)
 const char tag_PIN_MODES               = 'p'; // the event with a list of pin modes
  
-void sendDigitalPortChanges(Stream * stream); // function to send changed digital port data
-
 // IO events (messages from Arduino)
-const char tag_PORT_DATA     = 'p';   //  i/o event from Arduino is data on a digital port
-const char tag_ANALOG_VALUE  = 'a';   //  i/o event from Arduinois value of an analog pin
+const char tag_PORT_DATA        = 'p';   //  i/o event from Arduino is data on a digital port
+const char tag_ANALOG_VALUE     = 'a';   //  i/o event from Arduinois value of an analog pin
+const char tag_PIN_CAPABILITIES = 'c';   // event providing a bitfield array indicating pin capabilities
+
+void sendDigitalPortChanges(Stream * stream); // function to send changed digital port data
 
 // this class derives from the service class but has direct access to all pins
 class asipIOClass : public asipServiceClass
