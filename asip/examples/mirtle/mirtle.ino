@@ -56,7 +56,7 @@ void setup() {
   distanceSensor.begin(1,1,distancePins);
   //servos.begin(1,1,servoPins);
   asip.sendPinModes(); // for debug
-  asip.sendPinMap(); 
+  asip.sendPortMap(); 
 }
 
 void loop() 

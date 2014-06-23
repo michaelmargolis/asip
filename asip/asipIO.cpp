@@ -57,6 +57,7 @@ void asipIOClass::reportValue(int sequenceId, Stream * stream)  // send the valu
     stream->write(tag_ANALOG_VALUE);
     stream->write(',');
     stream->print(nbrActiveAnalogPins);
+	stream->write(',');  // comma added 21 June 2014
     stream->write('{');
     for( byte pin=0, count=0; pin < MAX_ANALOG_INPUTS; pin++) {     
       if( analogInputsToReport & (1U << pin) ) { 
@@ -89,7 +90,7 @@ void asipIOClass::processRequestMsg(Stream *stream)
           setAutoreport(stream);       
           break;
       case tag_GET_PORT_TO_PIN_MAPPING:
-          asip.sendPinMap();
+          asip.sendPortMap();
           break;
       case tag_GET_PIN_MODES:
           asip.sendPinModes();

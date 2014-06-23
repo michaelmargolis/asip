@@ -165,7 +165,7 @@ void asipClass::sendPinModes()  // sends a list of all pin modes
   serial->write(EVENT_HEADER);
   serial->write(id_IO_SERVICE);
   serial->write(',');
-  serial->write(tag_GET_PIN_MODES);
+  serial->write(tag_PIN_MODES);
   serial->write(',');
   serial->print(NUM_DIGITAL_PINS);
   serial->write(',');  // comma added 21 June 2014
@@ -180,7 +180,7 @@ void asipClass::sendPinModes()  // sends a list of all pin modes
   }
 } 
 
-void asipClass::sendPinMap()
+void asipClass::sendPortMap()
 {
   // note that port numbers do not start at 0 and may not be consecutive
   serial->write(EVENT_HEADER);

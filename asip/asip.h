@@ -107,8 +107,8 @@ public:
   asipErr_t registerPinMode(byte pin, pinMode_t mode);
   pinMode_t getPinMode(byte pin); 
   void setPinMode(byte pin, pinMode_t mode); 
+  void sendPortMap(); 
   void sendPinModes(); 
-  void sendPinMap(); 
   void sendErrorMessage( const char svc, const char tag, asipErr_t errno, Stream *stream); 
 private:
   //friend class asipServiceClass; 

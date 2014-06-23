@@ -60,7 +60,7 @@ void setup() {
   heading3Axis.begin(NBR_MAG_AXIS,startI2C); // 3 raw values, 4th element is the calculated compass heading 
   servos.begin(1,1,servoPins);
   asip.sendPinModes(); // for debug
-  asip.sendPinMap();
+  asip.sendPortMap();
 }
 
 void loop() 
