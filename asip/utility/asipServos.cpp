@@ -69,7 +69,12 @@ void asipServoClass::remapPins(Stream *stream)
      // error message
    }
 }
-   
+ 
+void asipServoClass::reset()
+{
+
+}
+ 
 void asipServoClass::processRequestMsg(Stream *stream)
 {
    int request = stream->read();

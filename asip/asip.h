@@ -51,7 +51,8 @@ union capabilityMask
 //System messages
 // Request messages to Arduino
 const char SYSTEM_MSG_HEADER      = '#';  // system requests are preceded with this tag
-const char tag_SYSTEM_GET_INFO        = '?';  // Get version and hardware info
+const char tag_SYSTEM_GET_INFO    = '?';  // Get version and hardware info
+const char tag_RESTART_REQUEST    = 'R';  // disables all autoevents and attempts to restart all services 
 
 // messages from Arduino
 const char EVENT_HEADER        = '@';  // event messages are preceded with this tag 
@@ -60,7 +61,7 @@ const char DEBUG_MSG_HEADER    = '!';  // debug messages begin with this tag
 
 // tags available to all services (Don’t use these for some other service specific function)
 const char tag_AUTOEVENT_REQUEST = 'A';  // this tag sets autoevent status
-const char tag_REMAP_PIN_REQUEST = 'R';  // for services that can change pin numbers
+const char tag_REMAP_PIN_REQUEST = 'M';  // for services that can change pin numbers
 // Reply tags common to all services
 const char tag_SERVICE_EVENT     = 'e';  //  
 
@@ -90,6 +91,7 @@ public:
   virtual void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);    
   virtual void begin(byte nbrElements, const pinArray_t pins[]);  // you can use this terse version when there is one pin per element
   virtual void begin(byte nbrElements, serviceBeginCallback_t serviceBeginCallback); // begin with no pins starts an I2C service
+  virtual void reset()=0;
   virtual void reportValue(int sequenceId, Stream * stream)  = 0; // send the value of the given device
   virtual void reportValues(Stream *stream); // send all values separated by commas, preceded by header and terminated with newline
   virtual void setAutoreport(Stream *stream); // how many ticks between events, 0 disables 

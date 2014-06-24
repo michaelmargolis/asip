@@ -35,6 +35,11 @@ void asipDistanceClass::remapPins(Stream *stream)
    }
 }
 
+ void asipDistanceClass::reset()
+ {
+  
+ }
+ 
  void asipDistanceClass::reportValue(int sequenceId, Stream * stream)  // send the value of the given device
 {
   if( sequenceId < nbrElements) {

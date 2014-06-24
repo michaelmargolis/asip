@@ -54,6 +54,7 @@ const byte wheel_2QeiBPin = 4; //wheel 2 encoder chanel B input
 
 void encodersBegin();
 void encodersGetData(unsigned long &pulse1,long &count1, unsigned long &pulse2,  long &count2);
+void encodersReset();
 
 #endif
 

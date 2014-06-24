@@ -193,6 +193,11 @@ void encodersBegin()
   attachInterrupt(0, QEI_wheel_2, CHANGE);
 }
 
+void encodersReset()
+{
+  prevCount[0] = prevCount[1] = 0;
+}
+
 void encodersGetData(unsigned long &pulse1,long &count1, unsigned long &pulse2,  long &count2)
 {
   noInterrupts();

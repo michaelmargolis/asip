@@ -50,6 +50,7 @@ public:
 
    robotMotorClass(const char svcId, const char evtId);  
    void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);
+   void reset();
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device
    void reportValues(Stream *stream);
    void setMotor(byte motor, int speed);
@@ -64,6 +65,7 @@ class encoderClass : public asipServiceClass
 public:
    encoderClass(const char svcId);
    void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);
+   void reset();
    void reportValues(Stream * stream);
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device   
    void processRequestMsg(Stream *stream);
@@ -78,6 +80,7 @@ class bumpSensorClass : public asipServiceClass
 public:
    bumpSensorClass(const char svcId);
    void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);
+   void reset();
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device
    void processRequestMsg(Stream *stream);
 };
@@ -87,6 +90,7 @@ class irLineSensorClass : public asipServiceClass
 public:
    irLineSensorClass(const char svcId);
    void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);
+   void reset();
    void reportValues(Stream *stream);
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device
    void processRequestMsg(Stream *stream);

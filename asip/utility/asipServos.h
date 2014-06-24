@@ -34,6 +34,7 @@ class asipServoClass : public asipServiceClass
 public:
    asipServoClass(const char svcId, const char evtId);
    void begin(byte nbrElements, const pinArray_t pins[], Servo* servos);
+   void reset();
    void reportValues(Stream * stream);
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device   
    void processRequestMsg(Stream *stream);      

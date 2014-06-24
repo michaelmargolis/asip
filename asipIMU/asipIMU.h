@@ -68,6 +68,7 @@ public:
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device
    void reportValues(Stream *stream);
    void processRequestMsg(Stream *stream);
+   void reset();
 private:  
    int axis[NBR_GYRO_AXIS]; // buffer holding readings
  };   
@@ -81,6 +82,7 @@ public:
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device
    void reportValues(Stream *stream); // send all values separated by commas, preceded by header and terminated with newline
    void processRequestMsg(Stream *stream);
+   void reset();
 private:
    int readAxis(int sequenceId);
    int axis[NBR_ACCEL_AXIS];
@@ -95,6 +97,7 @@ public:
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device
    void reportValues(Stream *stream); // send all values separated by commas, preceded by header and terminated with newline  
    void processRequestMsg(Stream *stream);
+   void reset();
 private:
    int readAxis(int sequenceId);
    int axis[NBR_MAG_AXIS]; // the 4th element is the calculated Compass direction
@@ -109,6 +112,7 @@ public:
    void begin(byte nbrElements);   // classes that use I2C instead of specific pins use this begin method
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device
    void processRequestMsg(Stream *stream);
+   void reset();
 private:
    int readAxis(int sequenceId);
 };

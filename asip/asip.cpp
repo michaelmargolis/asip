@@ -49,7 +49,7 @@ void asipClass::begin(Stream *s, int svcCount, asipServiceClass **serviceArray, 
   s->println();  
  
 }
-
+ 
 void asipClass::service()
 { 
   if(serial->available() >= MIN_MSG_LEN) {  
@@ -100,6 +100,7 @@ void asipClass::service()
 void asipClass::processSystemMsg()
 {
    int request = serial->read();
+    printf("Req %c, tag %c\n");
    if(request == tag_SYSTEM_GET_INFO) {
       serial->write(EVENT_HEADER);   
       serial->write(SYSTEM_MSG_HEADER);
@@ -113,6 +114,13 @@ void asipClass::processSystemMsg()
       serial->print(CHIP_NAME);
       serial->write(',');
       serial->println(programName);
+   }
+   else if(request == tag_RESTART_REQUEST) {
+       printf("Resetting services\n");
+	   for(int i=0; i < nbrServices; i++) {
+	       services[i]->reset();
+           services[i]->autoInterval = 0;   // this disables autoInterval		   
+	   }
    }
    else {
      sendErrorMessage(SYSTEM_MSG_HEADER, request, ERR_UNKNOWN_REQUEST, serial);
@@ -281,6 +289,12 @@ void asipServiceClass::begin(byte _nbrElements, serviceBeginCallback_t serviceBe
   }  
 }
 
+// can be invoked by clients to restore conditions to start-up state
+ void asipServiceClass::reset()
+ {
+ 
+ }
+ 
 asipServiceClass::~asipServiceClass(){} 
 
 void asipServiceClass::reportValues(Stream *stream) 
@@ -305,7 +319,7 @@ void asipServiceClass::setAutoreport(Stream *stream) // reads stream for number 
   autoInterval = ticks;
   unsigned int currentTick = millis(); // truncate to a 16 bit value
   nextTrigger = currentTick + autoInterval; // set the next trigger tick count
-    printf("auto report set to %u for service %c\n",ticks, ServiceId);
+  printf("auto report set to %u for service %c\n",ticks, ServiceId);
 }
 
 void asipServiceClass::reportError( const char svc, const char request, asipErr_t errno, Stream *stream)

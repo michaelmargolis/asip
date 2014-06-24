@@ -44,6 +44,16 @@ void asipIOClass::begin(byte nbrElements, byte pinCount, const pinArray_t pins[]
 
 }
 
+void asipIOClass::reset()
+{
+  for( byte p = 0; p < NUM_DIGITAL_PINS; p++) {
+     if( asip.registerPinMode(p,UNALLOCATED_PIN_MODE) != ERR_MODE_UNAVAILABLE){
+	    // here if pin not  reserved or owned by other services
+		pinMode(p, INPUT); // this is the default Arduino pin state at startu-up
+	 }
+   }
+}
+
 void asipIOClass::reportValue(int sequenceId, Stream * stream)  // send the value of the given device
 {
 }

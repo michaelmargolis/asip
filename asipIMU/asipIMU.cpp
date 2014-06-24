@@ -29,6 +29,11 @@ void gyroClass::begin(byte nbrElements, serviceBeginCallback_t serviceBeginCallb
 
 }
 
+void gyroClass::reset()
+{
+
+}
+
  void gyroClass::reportValue(int sequenceId, Stream * stream)  // send the value of the given device
 {
   if( sequenceId < nbrElements) {
@@ -68,6 +73,12 @@ void AccelerometerClass::begin(byte nbrElements, serviceBeginCallback_t serviceB
 
 }
 
+
+void AccelerometerClass::reset()
+{
+
+}
+
  void AccelerometerClass::reportValue(int sequenceId, Stream * stream)  // send the value of the given device
 {
   if( sequenceId < nbrElements) {
@@ -104,6 +115,11 @@ void HeadingClass::begin(byte nbrElements, serviceBeginCallback_t serviceBeginCa
    nbrElements = constrain(nbrElements, 0, NBR_MAG_AXIS);    
    asipServiceClass::begin(nbrElements,serviceBeginCallback);  
    mag.initialize();
+
+}
+
+void HeadingClass::reset()
+{
 
 }
 

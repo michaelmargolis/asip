@@ -34,6 +34,7 @@ public:
 
    asipDistanceClass(const char svcId);  
    void begin(byte nbrElements, const pinArray_t pins[]);
+   void reset();
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device
    void processRequestMsg(Stream *stream);
    void remapPins(Stream *stream);

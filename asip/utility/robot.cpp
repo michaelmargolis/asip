@@ -31,6 +31,11 @@ robotMotorClass::robotMotorClass(const char svcId, const char evtId)
   }
 }
 
+void robotMotorClass::reset()
+{
+  stopMotors();
+}
+
 void robotMotorClass::reportValue(int sequenceId, Stream * stream)  // send the value of the given device
 {
    stream->println("motor");
@@ -98,8 +103,8 @@ encoderClass::encoderClass(const char svcId) : asipServiceClass(svcId){}
 // each encoder uses 2 pins
 void encoderClass::begin(byte nbrElements, byte pinCount, const pinArray_t pins[])
 {
- asipServiceClass::begin(nbrElements,pinCount,pins);
-   encodersBegin(); // todo - use the pins array instead of hard codeing in hubeeWheel.cpp
+  asipServiceClass::begin(nbrElements,pinCount,pins);
+  encodersBegin(); // todo - use the pins array instead of hard coding in hubeeWheel.cpp
 }
 
 void encoderClass::reportValues(Stream *stream) 
@@ -107,6 +112,11 @@ void encoderClass::reportValues(Stream *stream)
   encodersGetData(pulse[0], count[0], pulse[1], count[1]);
   asipServiceClass::reportValues(stream);    
   // pulse width is in microseconds
+}
+
+void encoderClass::reset()
+{
+  encodersReset();
 }
 
  void encoderClass::reportValue(int sequenceId, Stream * stream)  // send the value of the given device
@@ -137,6 +147,11 @@ void bumpSensorClass::bumpSensorClass::begin(byte nbrElements, byte pinCount, co
   for(int sw=0; sw < nbrElements; sw++) {     
      pinMode(pins[sw], INPUT_PULLUP); 
   }
+}
+
+void bumpSensorClass::reset()
+{
+
 }
 
  void bumpSensorClass::reportValue(int sequenceId, Stream * stream)  // send the value of the given device
@@ -176,6 +191,11 @@ void irLineSensorClass::reportValues(Stream *stream)
    asipServiceClass::reportValues(stream);
     // turn off IR emitters
    digitalWrite(pins[0], LOW);
+}
+
+void irLineSensorClass::reset()
+{
+
 }
 
 void irLineSensorClass::reportValue(int sequenceId, Stream * stream)  // send the value of the given device
