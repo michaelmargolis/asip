@@ -54,8 +54,8 @@ void setup() {
   
   asip.begin(&Serial, nbrServices, (asipServiceClass **)&services, sketchName); 
   asipIO.begin(); 
-  asip.registerPinMode(0,RESERVED_MODE);  // block the serial pins from being allocated
-  asip.registerPinMode(1,RESERVED_MODE);
+  asip.registerPinMode(0,RESERVED_MODE,SYSTEM_SERVICE_ID);  // reserve pins used by the serial port 
+  asip.registerPinMode(1,RESERVED_MODE,SYSTEM_SERVICE_ID);
   // start the services
   motors.begin(2,6,motorPins); // two motors that use a total of 6 pins  
   encoders.begin(2,4,encoderPins); // two encoders that use a total of 4 pins 

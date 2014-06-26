@@ -13,13 +13,11 @@
 #ifdef PRINTF_DEBUG
 // mode strings for debug
 char * modeStr[] = {"UNALLOCATED", "INPUT", "INPUT_PULLUP", "OUTPUT", "ANALOG", "PWM","INVALID","OTHER SERVICE", "RESERVED"}; 
-//char * modeStr[] = {"UNALLOCATED", "INPUT", "INPUT_PULLUP", "OUTPUT", "ANALOG", "PWM"}; 
-//char * modeExtStr[] = {"INVALID","OTHER SERVICE", "RESERVED"};   // add 3 to the index to print these from pinMode_t
 #endif
 
 void AssignPort(byte pin); // store register associated with given pin in register table 
 byte getPortIndex(byte pin); // return index into portRegisterTable associated with given pin
-void reportDigitalPins( byte pin, boolean report); //set or clear flag indicating reporting of this digital input
+void reportDigitalPins(Stream *stream, byte pin, boolean report); //set or clear flag indicating reporting of this digital input
 void checkPinChange();
 
 asipIOClass asipIO(id_IO_SERVICE,tag_ANALOG_VALUE); 
@@ -32,7 +30,7 @@ asipIOClass asipIO(id_IO_SERVICE,tag_ANALOG_VALUE);
 
 void asipIOClass::begin( )
 {
-  // arguments are ignored because the hardware is accessed directly  through registers
+  // arguments are not needed because the hardware is accessed directly through registers
   analogInputsToReport = 0;
   for( byte p = 0; p < NUM_DIGITAL_PINS; p++) {
      AssignPort(p);
@@ -47,9 +45,14 @@ void asipIOClass::begin(byte nbrElements, byte pinCount, const pinArray_t pins[]
 void asipIOClass::reset()
 {
   for( byte p = 0; p < NUM_DIGITAL_PINS; p++) {
-     if( asip.registerPinMode(p,UNALLOCATED_PIN_MODE) != ERR_MODE_UNAVAILABLE){
+    if( asip.getPinMode(p) < RESERVED_MODE) {  
+       if( asip.deregisterPinMode(p) == ERR_NO_ERROR){
 	    // here if pin not  reserved or owned by other services
 		pinMode(p, INPUT); // this is the default Arduino pin state at startu-up
+	   }
+	   else{
+	    printf("Error de-registering pin %d\n", p);
+	  }
 	 }
    }
 }
@@ -110,8 +113,11 @@ void asipIOClass::processRequestMsg(Stream *stream)
            asip.sendPinCapabilites();
            break;		   
       case tag_PIN_MODE:
-          err = PinMode(pin, value);      
+          err = PinMode(stream, pin, value);      
           break;
+	  case tag_GET_PIN_SERVICES_LIST:
+           asip.sendPinServicesList();	  
+		   break;
       case tag_DIGITAL_WRITE:
          err = DigitalWrite(pin,value);         
          break; 
@@ -155,7 +161,7 @@ void asipIOClass::reportDigitalPin(byte pin,boolean report)
  Pin requests are by their digital number, by default, requests will only succeed if
  the pin exists,supports the requested mode and is not reserved or allocated to a service.  
  */
-asipErr_t asipIOClass::PinMode(byte pin, int mode)
+asipErr_t asipIOClass::PinMode(Stream * stream, byte pin, int mode)
 {
   //printf("Request pinmode %s (%d) for pin %d\n", mode >=0 ? modeStr[mode] : modeExtStr[mode+3],mode,  pin);
   printf("Request pinmode %s (%d) for pin %d\n", modeStr[mode],mode,  pin);
@@ -165,9 +171,9 @@ asipErr_t asipIOClass::PinMode(byte pin, int mode)
   }
   if (IS_PIN_DIGITAL(pin)) {
     if (mode == INPUT_MODE || mode == INPUT_PULLUP_MODE) {
-       reportDigitalPins(pin,true); 
+       reportDigitalPins(stream, pin,true); 
     } else {
-       reportDigitalPins(pin,false); 
+       reportDigitalPins(stream, pin,false); 
     }
   }
   switch(mode) {
@@ -177,41 +183,41 @@ asipErr_t asipIOClass::PinMode(byte pin, int mode)
         pinMode(PIN_TO_DIGITAL(pin), INPUT);    // disable output driver
         digitalWrite(PIN_TO_DIGITAL(pin), LOW); // disable internal pull-ups
       }
-     err = asip.registerPinMode(pin,ANALOG_MODE);
+     err = asip.registerPinMode(pin,ANALOG_MODE, ServiceId);
     }
     break;
   case  INPUT_PULLUP_MODE:    
     if (IS_PIN_DIGITAL(pin)) {
       pinMode(PIN_TO_DIGITAL(pin), INPUT_PULLUP); // disable output driver      
-      err = asip.registerPinMode(pin,INPUT_PULLUP_MODE); 
+      err = asip.registerPinMode(pin,INPUT_PULLUP_MODE, ServiceId); 
     }
     break;
   case INPUT_MODE:
     if (IS_PIN_DIGITAL(pin)) {
       pinMode(PIN_TO_DIGITAL(pin), INPUT); // disable output driver
       digitalWrite(PIN_TO_DIGITAL(pin), LOW); // disable internal pull-ups
-      err = asip.registerPinMode(pin,INPUT_MODE);
+      err = asip.registerPinMode(pin,INPUT_MODE, ServiceId);
     }
     break;
   case OUTPUT_MODE:
     if (IS_PIN_DIGITAL(pin)) {
       digitalWrite(PIN_TO_DIGITAL(pin), LOW); // disable PWM
       pinMode(PIN_TO_DIGITAL(pin), OUTPUT_MODE);
-      err = asip.registerPinMode(pin,OUTPUT_MODE);
+      err = asip.registerPinMode(pin,OUTPUT_MODE, ServiceId);
     }
     break;
   case PWM_MODE:
     if (IS_PIN_PWM(pin)) {
       pinMode(PIN_TO_PWM(pin), OUTPUT_MODE);
       analogWrite(PIN_TO_PWM(pin), 0);
-      err = asip.registerPinMode(pin,PWM_MODE);
+      err = asip.registerPinMode(pin,PWM_MODE, ServiceId);
     }
     break;
    case UNALLOCATED_PIN_MODE: //Free up pin and restore to startup state
      if (IS_PIN_DIGITAL(pin)) {
       pinMode(PIN_TO_DIGITAL(pin), INPUT); // disable output driver
       digitalWrite(PIN_TO_DIGITAL(pin), LOW); // disable internal pull-ups
-      err = asip.registerPinMode(pin,UNALLOCATED_PIN_MODE);
+      err = asip.registerPinMode(pin,UNALLOCATED_PIN_MODE, ServiceId);
     }
     break;
   }
@@ -254,14 +260,7 @@ asipErr_t asipIOClass::DigitalWrite(byte pin, byte value)
   return err; 
 }
 
-void asipIOClass::sendDigitalPort(byte portNumber, byte portData,Stream *stream)
-{
-
-}
-
-
-// digital port code (todo move to separate file ??)
-
+// code to support reporting of digital ports
 // allow lots of ports if Mega or Arduino DUE   
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)  || defined(__SAM3X8E__) 
 const int MAX_IO_PORTS = 11;
@@ -310,26 +309,28 @@ byte getPortIndex(byte pin)
    return PORT_ERROR;
 }
 
-void reportDigitalPins( byte pin, boolean report)
+void reportDigitalPins(Stream *stream, byte pin, boolean report)
 {
 // todo - add error checking here
    byte portIndex = getPortIndex(pin);
    byte mask = digitalPinToBitMask(pin);  
-   if(report)
+   if(report) {
       reportPinMasks[portIndex] |= mask;
+	   sendDigitalPortChanges(stream,true);
+    }
     else
       reportPinMasks[portIndex] &= (~mask);
     VERBOSE_DEBUG( printf("Port index for pin %d is %d, mask=%xX\n", pin, portIndex, reportPinMasks[portIndex]); )    
 }
 
 // this function is repeatedly called by the main asip service routine
-void sendDigitalPortChanges(Stream * stream)
+void sendDigitalPortChanges(Stream * stream, bool sendIfNotChanged)
 {
    for( byte i=0; i < portCount; i++ ) {
       if(reportPinMasks[i] != 0) {
          byte port = portRegisterTable[i];
          byte data = *portInputRegister(port) & reportPinMasks[i];
-         if( data != previousPINs[i]) {            
+         if( (data != previousPINs[i]) || sendIfNotChanged ){            
             stream->write(EVENT_HEADER);
             stream->write(id_IO_SERVICE);
             stream->write(',');
@@ -337,7 +338,8 @@ void sendDigitalPortChanges(Stream * stream)
             stream->write(',');
             stream->print(port);
             stream->write(',');
-            stream->println(data,HEX);  
+            stream->print(data,HEX); 
+            stream->write('\n'); // todo - make define			
             previousPINs[i] = data; 
          }  
       }

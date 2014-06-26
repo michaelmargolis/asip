@@ -32,7 +32,7 @@ enum asipErr_t {ERR_NO_ERROR, ERR_INVALID_SERVICE, ERR_UNKNOWN_REQUEST, ERR_INVA
 typedef byte pinArray_t; // the type used by services to provide an array of needed pins 
 typedef bool (*serviceBeginCallback_t)(const char svc);   // callback for services such as I2C that don't explicitly use pins
 
-enum pinMode_t {UNALLOCATED_PIN_MODE, INPUT_MODE, INPUT_PULLUP_MODE, OUTPUT_MODE, ANALOG_MODE, PWM_MODE, INVALID_MODE, OTHER_SERVICE_MODE,  RESERVED_MODE};
+enum pinMode_t {UNALLOCATED_PIN_MODE, INPUT_MODE, INPUT_PULLUP_MODE, OUTPUT_MODE, ANALOG_MODE, PWM_MODE, RESERVED_MODE, OTHER_SERVICE_MODE, INVALID_MODE };
 
 // bit field indicating the capability of pins (see asipIO for usage)
 struct pinCapability_t {
@@ -46,8 +46,14 @@ union capabilityMask
   {
     pinCapability_t bits;
     char ch;
-  } ;   
+  } ; 
+
+struct pinRegistration_t  {
+     byte mode    : 3;
+     byte service : 5;
+  };   
    
+const char SYSTEM_SERVICE_ID     = '@'; // only used when de-registering pins at reset    
 //System messages
 // Request messages to Arduino
 const char SYSTEM_MSG_HEADER      = '#';  // system requests are preceded with this tag
@@ -85,31 +91,29 @@ extern char _buf[64];
 class asipServiceClass 
 {
 public:
-  asipServiceClass(const char svcId, const char evtId); 
-  asipServiceClass(const char svcId); // use default system event tag
-  virtual ~asipServiceClass();  
-  virtual void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);    
+  asipServiceClass(const char svcId); // Unique service ID and use of default system event tag
+  asipServiceClass(const char svcId, const char evtId); // use this if you need an event tag different from default
+  virtual ~asipServiceClass();   
   virtual void begin(byte nbrElements, const pinArray_t pins[]);  // you can use this terse version when there is one pin per element
+  virtual void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]); // specify total number of pins
   virtual void begin(byte nbrElements, serviceBeginCallback_t serviceBeginCallback); // begin with no pins starts an I2C service
-  virtual void reset()=0;
+  virtual void reset()=0;                                   // can be invoked by clients to restore conditions to start-up state
   virtual void reportValue(int sequenceId, Stream * stream)  = 0; // send the value of the given device
   virtual void reportValues(Stream *stream); // send all values separated by commas, preceded by header and terminated with newline
   virtual void setAutoreport(Stream *stream); // how many ticks between events, 0 disables 
   virtual void processRequestMsg(Stream *stream) = 0;
-  //virtual void reportInvalidRequest( const char svc, const char request, const char *errorMessage, Stream *stream);
   virtual void reportError( const char svc, const char request, asipErr_t errno, Stream *stream); // report service request errors
-  
-   // todo - protect these but give access to asipClass
-   const char ServiceId;       // the unique character that identifies this service 
-   unsigned int autoInterval;  // the number of ticks between each autoevent, 0 disables autoevents
-   unsigned int nextTrigger;   // tick value for the next event (note this rolls over after 65 seconds so intervals should be limited to under one minute
    
 protected:
-   const char EventId;        // the unique character that identifies the default event provided by service
-   byte nbrElements;         // the number of items supported by this service
-   byte pinCount;            // total number of pins in the pins array 
-   const pinArray_t *pins;   // stores pins used by this service  
-  
+   const char EventId;         // the unique character that identifies the default event provided by service
+   byte nbrElements;           // the number of items supported by this service
+   byte pinCount;              // total number of pins in the pins array 
+   const pinArray_t *pins;     // stores pins used by this service  
+   
+   friend class asipClass; 
+   const char ServiceId;       // the unique Upper Case ASCII character that identifies this service 
+   unsigned int autoInterval;  // the number of ticks between each autoevent, 0 disables autoevents
+   unsigned int nextTrigger;   // tick value for the next event (note this rolls over after 65 seconds so intervals should be limited to under one minute  
 };
 
 class asipClass 
@@ -117,29 +121,34 @@ class asipClass
 public:
   asipClass();
   void begin(Stream *s, int svcCount, asipServiceClass *serviceArray[], char *sketchName );
+  asipErr_t registerPinMode(byte pin, pinMode_t mode, char serviceId);
   void service();
+  void sendPortMap(); 
+  void sendPinModes(); 
+  void sendErrorMessage( const char svc, const char tag, asipErr_t errno, Stream *stream); 
+private:
+  friend class asipIOClass; 
   // low level interface 
   void sendAnalog(byte pin, int value);
   void sendDigitalPort(byte portNumber, int portData);
-  asipErr_t registerPinMode(byte pin, pinMode_t mode);
+  asipErr_t deregisterPinMode(byte pin);
   pinMode_t getPinMode(byte pin); 
+  char getServiceId(byte pin); 
   void setPinMode(byte pin, pinMode_t mode); 
-  void sendPortMap(); 
-  void sendPinModes(); 
   void sendPinCapabilites();
-  void sendErrorMessage( const char svc, const char tag, asipErr_t errno, Stream *stream); 
-private:
-  //friend class asipServiceClass; 
+  void sendPinServicesList();
+
   Stream *serial;
   char *programName;
   unsigned int autoEventTickDuration; // the number of milliseconds between each event tick
   unsigned int previousTick;
   asipServiceClass **services;
   int nbrServices; 
-  pinMode_t pinModes[NUM_DIGITAL_PINS]; // num pins defined in pins_arduino.h for each board
+  pinRegistration_t pinRegister[NUM_DIGITAL_PINS];
   boolean I2C_Started;
 
   void processSystemMsg();
+  bool isValidServiceId(char serviceId);
 
  };
  

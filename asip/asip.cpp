@@ -38,15 +38,15 @@ void asipClass::begin(Stream *s, int svcCount, asipServiceClass **serviceArray, 
   s->write(DEBUG_MSG_HEADER);
   s->print(sketchName);  
   // list all implemented service tags
-  s->print(" running on ");
-  s->print(CHIP_NAME);
-  s->print(" with Services: ");
+  s->print(F(" running on "));
+  s->print(F(CHIP_NAME));
+  s->print(F(" with Services: "));
   
   for(int i=0; i < svcCount; i++ ){
     s->write(services[i]->ServiceId);
     s->write(' ');
   }
-  s->println();  
+  s->write('\n');  
  
 }
  
@@ -78,7 +78,7 @@ void asipClass::service()
      }
   }
   // service digital inputs
-  sendDigitalPortChanges(serial);
+  sendDigitalPortChanges(serial, false);
   
   // auto events for services:
   unsigned int currentTick = millis();
@@ -99,8 +99,7 @@ void asipClass::service()
 
 void asipClass::processSystemMsg()
 {
-   int request = serial->read();
-    printf("Req %c, tag %c\n");
+   int request = serial->read();   
    if(request == tag_SYSTEM_GET_INFO) {
       serial->write(EVENT_HEADER);   
       serial->write(SYSTEM_MSG_HEADER);
@@ -128,14 +127,41 @@ void asipClass::processSystemMsg()
 }
 
 // returns error code
-asipErr_t asipClass::registerPinMode(byte pin, pinMode_t mode)
+asipErr_t asipClass::registerPinMode(byte pin, pinMode_t mode, char serviceId)
 {
   asipErr_t err = ERR_NO_ERROR;
   // Serial.print("PIN in reg =") ; Serial.println(pin);    
   if(pin >= 0 && pin < NUM_DIGITAL_PINS) {     
   // Serial.print("mode in reg =") ; Serial.println(pinModes[pin]); 
-    if( getPinMode(pin) != RESERVED_MODE && getPinMode(pin) != OTHER_SERVICE_MODE) {    
-      setPinMode(pin,mode);  
+    // only system can set RESERVE_MODE
+    if( (mode == RESERVED_MODE && serviceId == SYSTEM_SERVICE_ID) || isValidServiceId(serviceId) ){
+		if( getPinMode(pin) < RESERVED_MODE) {    
+		  setPinMode(pin,mode); 
+		  pinRegister[pin].service = serviceId - '@'; 	  
+		  //printf("register pin %d for mode %d for service %c (as %d)\n", pin, mode,serviceId,pinRegister[pin].service );         
+		}
+		else {
+		 err = ERR_MODE_UNAVAILABLE;
+		}    
+	}
+	else {
+	  err = ERR_INVALID_SERVICE;
+	}
+  }
+  else {
+     err = ERR_INVALID_PIN;
+  }
+  return err;
+}
+
+// only used when for system reset requests
+asipErr_t asipClass::deregisterPinMode(byte pin)
+{
+  asipErr_t err = ERR_NO_ERROR;
+  // Serial.print("PIN in dereg =") ; Serial.println(pin);    
+  if(pin >= 0 && pin < NUM_DIGITAL_PINS) {     
+    if( getPinMode(pin) < RESERVED_MODE) {    
+      setPinMode(pin,UNALLOCATED_PIN_MODE);  
       //Serial.print("register ");Serial.print(pin); Serial.print(" for mode "); Serial.println(mode);         
     }
     else {
@@ -145,26 +171,52 @@ asipErr_t asipClass::registerPinMode(byte pin, pinMode_t mode)
   else {
      err = ERR_INVALID_PIN;
   }
+  if(err)  printf("de-register error %d\n", err);
   return err;
+}
+
+bool asipClass::isValidServiceId(char serviceId)
+{
+  return (serviceId >= 'A' && serviceId <= 'Z');
 }
 
 // Sets the mode of the given pin 
 void asipClass::setPinMode(byte pin, pinMode_t mode) 
 {
   if( pin >=0 && pin < NUM_DIGITAL_PINS) {
-    pinModes[pin] = mode;
+    //pinModes[pin] = mode;
+	pinRegister[pin].mode = mode; 
   } 
 }
 
-// returns them mode of the given pin 
+// returns the mode of the given pin 
 pinMode_t asipClass::getPinMode(byte pin) 
 {
   if( pin >=0 && pin < NUM_DIGITAL_PINS) {
-    return pinModes[pin];
+    return (pinMode_t)pinRegister[pin].mode;
+    //return pinModes[pin];
   }
   else {
     return INVALID_MODE;
   } 
+}
+
+// returns the service id associated with the given pin 
+char asipClass::getServiceId(byte pin) 
+{
+  char svc = '?';
+  if( pin >=0 && pin < NUM_DIGITAL_PINS) {
+	
+	if( pinRegister[pin].mode == OTHER_SERVICE_MODE){
+       svc =  (char) pinRegister[pin].service + '@';
+	 }
+	else if( pinRegister[pin].mode == RESERVED_MODE) {
+      svc = '@';	  
+    }	
+	else
+	  svc = id_IO_SERVICE;
+  }        	
+   return svc;	
 }
 
  
@@ -179,7 +231,8 @@ void asipClass::sendPinModes()  // sends a list of all pin modes
   serial->write(',');  // comma added 21 June 2014
   serial->write('{');
   for(byte p=0; p < NUM_DIGITAL_PINS; p++) {
-     int mode = (char)pinModes[p]; // print values  > 127 as negative numbers
+     //int mode = (char)pinModes[p]; 
+	 int mode = (char)getPinMode(p);
      serial->print( mode); 
      if( p != NUM_DIGITAL_PINS-1)
         serial->write(',');
@@ -188,6 +241,26 @@ void asipClass::sendPinModes()  // sends a list of all pin modes
   }
 } 
 
+void asipClass::sendPinServicesList() // sends a list of all pins with associated service id if any
+{
+  serial->write(EVENT_HEADER);
+  serial->write(id_IO_SERVICE);
+  serial->write(',');
+  serial->write(tag_PIN_SERVICES_LIST);
+  serial->write(',');
+  serial->print(NUM_DIGITAL_PINS);
+  serial->write(',');  // comma added 21 June 2014
+  serial->write('{');
+  for(byte p=0; p < NUM_DIGITAL_PINS; p++) {
+     //int mode = (char)pinModes[p]; 
+	 int mode = (char)getServiceId(p);
+     serial->write( mode); 
+     if( p != NUM_DIGITAL_PINS-1)
+        serial->write(',');
+      else  
+        serial->println("}");
+  }
+}
 void asipClass::sendPinCapabilites()  // sends a bitfield array indicating capabilities all pins 
 {
   serial->write(EVENT_HEADER);
@@ -245,8 +318,7 @@ void asipClass::sendErrorMessage( const char svc, const char tag, asipErr_t errn
   stream->print(errno);
   stream->print('(');  
   stream->print(errStr[errno]); 
-  stream->println(')');  
-  
+  stream->println(')');   
 } 
 
 asipClass asip;
@@ -268,7 +340,7 @@ void asipServiceClass::begin(byte _nbrElements, byte _pinCount, const pinArray_t
   pins = _pins;
   autoInterval = 0; // turn off auto events
   for( byte p=0; p <pinCount; p++) {
-     asip.registerPinMode(pins[p], OTHER_SERVICE_MODE);
+     asip.registerPinMode(pins[p], OTHER_SERVICE_MODE,ServiceId);
   }
   //printf(%d, svc begin\n",ServiceId);
 }

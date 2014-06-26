@@ -22,7 +22,6 @@
 
 //IDs already used by the core mirtle services:  I,M,E,B,R
 
-
 // Servo service
 const char id_SERVO_SERVICE = 'S';
 // methods

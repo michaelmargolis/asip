@@ -50,8 +50,8 @@ void setup() {
   
   asip.begin(&Serial, nbrServices, (asipServiceClass **)&services, sketchName ); 
   asipIO.begin(); // start the IO service
-  asip.registerPinMode(0,RESERVED_MODE);  // reserver pins used by the serial port 
-  asip.registerPinMode(1,RESERVED_MODE); 
+  asip.registerPinMode(0,RESERVED_MODE,SYSTEM_SERVICE_ID);  // reserve pins used by the serial port 
+  asip.registerPinMode(1,RESERVED_MODE,SYSTEM_SERVICE_ID); 
   asipDistance.begin(NBR_DISTANCE_SENSORS,distancePins); 
   asipServos.begin(NBR_SERVOS,servoPins,myServos);
   asip.sendPinModes(); // for debug

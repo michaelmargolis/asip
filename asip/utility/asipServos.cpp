@@ -60,9 +60,10 @@ void asipServoClass::remapPins(Stream *stream)
 		// if all pins are valid then detach the old pins and attach the new
 		for(int i=0; i < count; i++){
 	      myServoPtr[i].detach();	 
-          asip.registerPinMode(pins[i], UNALLOCATED_PIN_MODE); // deregister the pin old
+		  //////////TODO - FIX THIS !!!!!!!!!!!!!!!
+          asip.registerPinMode(pins[i], UNALLOCATED_PIN_MODE, ServiceId); // deregister the pin old
 		  myServoPtr[i].attach(newPins[i]);	 
-		  asip.registerPinMode(newPins[i], OTHER_SERVICE_MODE); // register the new pin
+		  asip.registerPinMode(newPins[i], OTHER_SERVICE_MODE, ServiceId); // register the new pin
 	    }	   
    }
    else {
