@@ -10,8 +10,12 @@
  
 #include "asipDistance.h"
 
-
-asipDistanceClass::asipDistanceClass(const char svcId) : asipServiceClass(svcId){}
+static PROGMEM const prog_char myName[]  = "Distance";
+ 
+asipDistanceClass::asipDistanceClass(const char svcId) : asipServiceClass(svcId)
+{
+   svcName = myName;
+}
 
 // each sensor uses 1 pin
 void asipDistanceClass::begin(byte nbrElements, const pinArray_t pins[])
@@ -35,6 +39,12 @@ void asipDistanceClass::remapPins(Stream *stream)
    }
 }
 
+/*
+void asipDistanceClass::reportName(Stream * stream)
+{
+  stream->println(F(ASIP_SERVICE_NAME));
+}
+*/
  void asipDistanceClass::reset()
  {
   

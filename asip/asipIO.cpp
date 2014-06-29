@@ -10,6 +10,10 @@
 
 #include "asipIO.h"
 
+//#define ASIP_SERVICE_NAME  ((asipSvcName) "ASIP core IO")
+//THIS_SVC_NAME("ASIP core IO");
+
+
 #ifdef PRINTF_DEBUG
 // mode strings for debug
 char * modeStr[] = {"UNALLOCATED", "INPUT", "INPUT_PULLUP", "OUTPUT", "ANALOG", "PWM","INVALID","OTHER SERVICE", "RESERVED"}; 
@@ -20,12 +24,18 @@ byte getPortIndex(byte pin); // return index into portRegisterTable associated w
 void reportDigitalPins(Stream *stream, byte pin, boolean report); //set or clear flag indicating reporting of this digital input
 void checkPinChange();
 
-asipIOClass asipIO(id_IO_SERVICE,tag_ANALOG_VALUE); 
+PROGMEM const prog_char myName[]  = "ASIP core IO";
+//asipSvcName myName[] PROGMEM = "ASIP core IO";
+
+asipIOClass asipIO(id_IO_SERVICE,tag_ANALOG_VALUE ); 
 
 
-  asipIOClass::asipIOClass(const char svcId, const char evtId)
-  :asipServiceClass(svcId,evtId)
+
+
+  asipIOClass::asipIOClass(const char svcId, const char evtId )
+  :asipServiceClass(svcId,evtId )
 {
+ svcName = myName;
 }
 
 void asipIOClass::begin( )
@@ -57,6 +67,7 @@ void asipIOClass::reset()
    }
 }
 
+
 void asipIOClass::reportValue(int sequenceId, Stream * stream)  // send the value of the given device
 {
 }
@@ -84,7 +95,7 @@ void asipIOClass::reportValue(int sequenceId, Stream * stream)  // send the valu
            stream->println("}"); 
       }      
     }
-    stream->write('\n'); // todo - make define
+    stream->write(MSG_TERMINATOR); 
   } 
 }
 
@@ -339,7 +350,7 @@ void sendDigitalPortChanges(Stream * stream, bool sendIfNotChanged)
             stream->print(port);
             stream->write(',');
             stream->print(data,HEX); 
-            stream->write('\n'); // todo - make define			
+            stream->write(MSG_TERMINATOR); 			
             previousPINs[i] = data; 
          }  
       }

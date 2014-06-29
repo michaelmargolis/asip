@@ -13,7 +13,6 @@
 #define asipServo_h_h
 
 #include "asip.h"
-
 #include <Servo.h> 
 
 // Service and method defines
@@ -36,7 +35,8 @@ public:
    void reset();
    void reportValues(Stream * stream);
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device   
-   void processRequestMsg(Stream *stream);      
+   void processRequestMsg(Stream *stream); 
+   //void reportName(Stream *stream);   
 private: 
    void write(byte servoId, byte angle);
    Servo *myServoPtr;
@@ -44,6 +44,7 @@ private:
 };   
 
 extern asipServoClass asipServos;
+
 #endif
  
    

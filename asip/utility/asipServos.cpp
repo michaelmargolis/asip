@@ -10,10 +10,13 @@
  
 #include "asipServos.h"
 
+static PROGMEM const prog_char myName[]  =  "Servos";
 
 asipServoClass::asipServoClass(const char svcId, const char evtId)
-  :asipServiceClass(svcId,evtId)
-{}
+  :asipServiceClass(svcId)
+{
+   svcName = myName;
+}
 
 // each servo uses 1 pin
  void asipServoClass::begin(byte nbrElements, const pinArray_t pins[], Servo* servoPtr )
@@ -36,7 +39,14 @@ void asipServoClass::reportValue(int sequenceId, Stream * stream)  // send the v
 {
   // this class does not report
 }
-  
+ 
+ /*
+void asipServoClass::reportName(Stream * stream)
+{
+  stream->println(F(ASIP_SERVICE_NAME));
+}
+ */
+ 
 void asipServoClass::write(byte servoId, byte angle)
 {
    if(servoId < nbrElements){

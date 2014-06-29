@@ -38,6 +38,7 @@ public:
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device
    void processRequestMsg(Stream *stream);
    void remapPins(Stream *stream);
+   //void reportName(Stream *stream);
 private:
    int getDistance(int sequenceId);
  };

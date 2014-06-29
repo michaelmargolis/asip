@@ -20,14 +20,38 @@
 #define IS_PIN_ANALOG(P)        ((P) >= 14 && (P) < 14 + NUM_ANALOG_INPUTS)
 #define PIN_TO_ANALOG(P)        (P-14)
 #define ANALOG_PIN_TO_DIGITAL   (P+14)
+#define SERIAL_RX_PIN            0
+#define SERIAL_TX_PIN            1
+
 #elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) 
 #define IS_PIN_ANALOG(p)        ((p) >= 54 && (p) < NUM_DIGITAL_PINS)
 #define PIN_TO_ANALOG(P)        (P-54)
 #define ANALOG_PIN_TO_DIGITAL   (P+54)
+#define SERIAL_RX_PIN            0
+#define SERIAL_TX_PIN            1
+#define SERIAL1_RX_PIN           19
+#define SERIAL1_TX_PIN           18
+#define SERIAL2_RX_PIN           17
+#define SERIAL2_TX_PIN           16
+#define SERIAL3_RX_PIN           15
+#define SERIAL3_TX_PIN           14
+
+
 #elif defined(__AVR_ATmega32U4__)
 #define IS_PIN_ANALOG(p)        ((p) >= 18 && (p) < NUM_DIGITAL_PINS)
 #define PIN_TO_ANALOG(P)        (P-18)
 #define ANALOG_PIN_TO_DIGITAL   (P+18)
+#define SERIAL_RX_PIN            0
+#define SERIAL_TX_PIN            1
+
+#elif defined(__AVR_ATmega644P__)
+#define IS_PIN_ANALOG(p)        ((p) >= 23 && (p) < NUM_DIGITAL_PINS)
+#define PIN_TO_ANALOG(P)        (P-24)
+#define ANALOG_PIN_TO_DIGITAL   (P+24)
+#define SERIAL_RX_PIN            8
+#define SERIAL_TX_PIN            9
+#define SERIAL1_RX_PIN           10
+#define SERIAL1_TX_PIN           11
 
 #else
 #error "Analog pin macros not defined in board.h for this chip"

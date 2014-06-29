@@ -58,6 +58,7 @@ public:
    void stopMotor(byte motor);
    void stopMotors();
    void processRequestMsg(Stream *stream);
+ //  void reportName(Stream *stream);
  };
    
 class encoderClass : public asipServiceClass
@@ -69,6 +70,7 @@ public:
    void reportValues(Stream * stream);
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device   
    void processRequestMsg(Stream *stream);
+  // void reportName(Stream *stream);
 private:
   unsigned long pulse[NBR_WHEELS];  
   long count[NBR_WHEELS];  
@@ -83,6 +85,7 @@ public:
    void reset();
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device
    void processRequestMsg(Stream *stream);
+  // void reportName(Stream *stream);
 };
 
 class irLineSensorClass : public asipServiceClass
@@ -94,6 +97,7 @@ public:
    void reportValues(Stream *stream);
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device
    void processRequestMsg(Stream *stream);
+  // void reportName(Stream *stream);
 };    
 
 

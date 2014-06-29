@@ -46,7 +46,7 @@ void asipClass::begin(Stream *s, int svcCount, asipServiceClass **serviceArray, 
     s->write(services[i]->ServiceId);
     s->write(' ');
   }
-  s->write('\n');  
+  s->write(MSG_TERMINATOR);  
  
 }
  
@@ -54,7 +54,7 @@ void asipClass::service()
 { 
   if(serial->available() >= MIN_MSG_LEN) {  
      int tag = serial->read();
-     if( tag != '\n') { // for now, ignore the newline at the end of the message   
+     if( tag != MSG_TERMINATOR) { // for now, ignore the newline at the end of the message   
         if(tag == SYSTEM_MSG_HEADER) {
           if(serial->read() == ',') {// tag must be followed by a separator 
               processSystemMsg();
@@ -112,7 +112,10 @@ void asipClass::processSystemMsg()
       serial->write(',');
       serial->print(CHIP_NAME);
       serial->write(',');
-      serial->println(programName);
+	  serial->print(NUM_DIGITAL_PINS);
+      serial->write(',');
+      serial->print(programName);
+	  serial->write(MSG_TERMINATOR);
    }
    else if(request == tag_RESTART_REQUEST) {
        printf("Resetting services\n");
@@ -175,10 +178,28 @@ asipErr_t asipClass::deregisterPinMode(byte pin)
   return err;
 }
 
+// reserve the given pin
+asipErr_t asipClass::reserve(byte pin)
+{
+  return registerPinMode(pin,RESERVED_MODE,SYSTEM_SERVICE_ID);
+} 
+  
 bool asipClass::isValidServiceId(char serviceId)
 {
   return (serviceId >= 'A' && serviceId <= 'Z');
 }
+
+asipServiceClass*  asipClass::serviceFromId( char tag)
+{
+   asipServiceClass* svcPtr = NULL;
+    for(int svc=0; svc < nbrServices; svc++) {
+	     if( services[svc]->ServiceId == tag) {
+		    svcPtr = services[svc];
+			break;
+		 }
+	}
+	return svcPtr;	
+}	
 
 // Sets the mode of the given pin 
 void asipClass::setPinMode(byte pin, pinMode_t mode) 
@@ -253,8 +274,14 @@ void asipClass::sendPinServicesList() // sends a list of all pins with associate
   serial->write('{');
   for(byte p=0; p < NUM_DIGITAL_PINS; p++) {
      //int mode = (char)pinModes[p]; 
-	 int mode = (char)getServiceId(p);
-     serial->write( mode); 
+	 int svc = (char)getServiceId(p);
+     serial->write( svc ); 
+	 serial->write( ':' ); 	
+	 asipServiceClass* svcPtr = serviceFromId(svc);
+	 if( svcPtr != NULL)
+         svcPtr->reportName(serial);	 
+     else 	
+         serial->print('?');	 
      if( p != NUM_DIGITAL_PINS-1)
         serial->write(',');
       else  
@@ -377,11 +404,15 @@ void asipServiceClass::reportValues(Stream *stream)
   stream->write(EventId);
   stream->write(',');
   stream->print(nbrElements);
-  for(byte count = 0; count < nbrElements; count++){
-      stream->write(',');    
+  stream->write(',');
+  stream->write('{');
+  for(byte count = 0; count < nbrElements; count++){   
       reportValue(count, stream);
+	  if(count < nbrElements-1)
+	     stream->write(',');  // comma between all but last element
   }
-  stream->write('\n'); // todo - make define
+  stream->write('}');
+  stream->write(MSG_TERMINATOR); 
   
 }
 
@@ -392,6 +423,19 @@ void asipServiceClass::setAutoreport(Stream *stream) // reads stream for number 
   unsigned int currentTick = millis(); // truncate to a 16 bit value
   nextTrigger = currentTick + autoInterval; // set the next trigger tick count
   printf("auto report set to %u for service %c\n",ticks, ServiceId);
+}
+
+char asipServiceClass::getServiceId()
+{
+  return ServiceId;
+}
+
+void asipServiceClass::reportName(Stream *stream)
+{
+   char c; 
+   const prog_char *str = svcName;
+   while((c = pgm_read_byte(str++))) 
+     stream->write(c);
 }
 
 void asipServiceClass::reportError( const char svc, const char request, asipErr_t errno, Stream *stream)

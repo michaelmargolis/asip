@@ -11,7 +11,7 @@
 #ifndef asip_h
 #define asip_h
 
-#include "Boards.h"  // Hardware pin macros
+#include "boards.h"  // Hardware pin macros
 #include "Arduino.h"
 
 #define PRINTF_DEBUG
@@ -74,6 +74,11 @@ const char tag_SERVICE_EVENT     = 'e';  //
 const byte MIN_MSG_LEN = 4;  // valid request messages must be at least this many characters
 
 const char NO_EVENT = '\0';  // tag to indicate the a service does not produce an event
+const char MSG_TERMINATOR = '\n';
+
+#define asipCHECK_PINS(a) extern const pinArray_t (a); //a macro to test if number of pins is same as server instances
+//#define asipSvcName   PROGMEM const prog_char * 
+#define asipSvcName static PROGMEM const prog_char 
 
 
 #ifdef PRINTF_DEBUG
@@ -103,12 +108,17 @@ public:
   virtual void setAutoreport(Stream *stream); // how many ticks between events, 0 disables 
   virtual void processRequestMsg(Stream *stream) = 0;
   virtual void reportError( const char svc, const char request, asipErr_t errno, Stream *stream); // report service request errors
-   
+  virtual void reportName(Stream *stream);
+  virtual char getServiceId();
+  
+  PROGMEM const prog_char *svcName  ;
 protected:
    const char EventId;         // the unique character that identifies the default event provided by service
    byte nbrElements;           // the number of items supported by this service
    byte pinCount;              // total number of pins in the pins array 
    const pinArray_t *pins;     // stores pins used by this service  
+   //static asipSvcName svcName;        // stores the name of the service in progmem 
+
    
    friend class asipClass; 
    const char ServiceId;       // the unique Upper Case ASCII character that identifies this service 
@@ -122,6 +132,7 @@ public:
   asipClass();
   void begin(Stream *s, int svcCount, asipServiceClass *serviceArray[], char *sketchName );
   asipErr_t registerPinMode(byte pin, pinMode_t mode, char serviceId);
+  asipErr_t reserve(byte pin); 
   void service();
   void sendPortMap(); 
   void sendPinModes(); 
@@ -149,6 +160,7 @@ private:
 
   void processSystemMsg();
   bool isValidServiceId(char serviceId);
+  asipServiceClass* serviceFromId( char tag);
 
  };
  
