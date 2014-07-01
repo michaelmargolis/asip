@@ -112,17 +112,17 @@ void asipClass::processSystemMsg()
       serial->write(',');
       serial->print(CHIP_NAME);
       serial->write(',');
-	  serial->print(NUM_DIGITAL_PINS);
+      serial->print(NUM_DIGITAL_PINS);
       serial->write(',');
       serial->print(programName);
-	  serial->write(MSG_TERMINATOR);
+      serial->write(MSG_TERMINATOR);
    }
    else if(request == tag_RESTART_REQUEST) {
        printf("Resetting services\n");
-	   for(int i=0; i < nbrServices; i++) {
-	       services[i]->reset();
-           services[i]->autoInterval = 0;   // this disables autoInterval		   
-	   }
+       for(int i=0; i < nbrServices; i++) {
+           services[i]->reset();
+           services[i]->autoInterval = 0;   // this disables autoInterval          
+       }
    }
    else {
      sendErrorMessage(SYSTEM_MSG_HEADER, request, ERR_UNKNOWN_REQUEST, serial);
@@ -138,18 +138,18 @@ asipErr_t asipClass::registerPinMode(byte pin, pinMode_t mode, char serviceId)
   // Serial.print("mode in reg =") ; Serial.println(pinModes[pin]); 
     // only system can set RESERVE_MODE
     if( (mode == RESERVED_MODE && serviceId == SYSTEM_SERVICE_ID) || isValidServiceId(serviceId) ){
-		if( getPinMode(pin) < RESERVED_MODE) {    
-		  setPinMode(pin,mode); 
-		  pinRegister[pin].service = serviceId - '@'; 	  
-		  //printf("register pin %d for mode %d for service %c (as %d)\n", pin, mode,serviceId,pinRegister[pin].service );         
-		}
-		else {
-		 err = ERR_MODE_UNAVAILABLE;
-		}    
-	}
-	else {
-	  err = ERR_INVALID_SERVICE;
-	}
+        if( getPinMode(pin) < RESERVED_MODE) {    
+          setPinMode(pin,mode); 
+          pinRegister[pin].service = serviceId - '@';     
+          //printf("register pin %d for mode %d for service %c (as %d)\n", pin, mode,serviceId,pinRegister[pin].service );         
+        }
+        else {
+         err = ERR_MODE_UNAVAILABLE;
+        }    
+    }
+    else {
+      err = ERR_INVALID_SERVICE;
+    }
   }
   else {
      err = ERR_INVALID_PIN;
@@ -181,7 +181,14 @@ asipErr_t asipClass::deregisterPinMode(byte pin)
 // reserve the given pin
 asipErr_t asipClass::reserve(byte pin)
 {
-  return registerPinMode(pin,RESERVED_MODE,SYSTEM_SERVICE_ID);
+     return registerPinMode(pin,RESERVED_MODE,SYSTEM_SERVICE_ID);
+} 
+
+// reserve pins used for serial communication
+asipErr_t asipClass::reserveSerialPins()
+{
+ 
+ //    return registerPinMode(pin,RESERVED_MODE,SYSTEM_SERVICE_ID);
 } 
   
 bool asipClass::isValidServiceId(char serviceId)
@@ -193,20 +200,20 @@ asipServiceClass*  asipClass::serviceFromId( char tag)
 {
    asipServiceClass* svcPtr = NULL;
     for(int svc=0; svc < nbrServices; svc++) {
-	     if( services[svc]->ServiceId == tag) {
-		    svcPtr = services[svc];
-			break;
-		 }
-	}
-	return svcPtr;	
-}	
+         if( services[svc]->ServiceId == tag) {
+            svcPtr = services[svc];
+            break;
+         }
+    }
+    return svcPtr;  
+}   
 
 // Sets the mode of the given pin 
 void asipClass::setPinMode(byte pin, pinMode_t mode) 
 {
   if( pin >=0 && pin < NUM_DIGITAL_PINS) {
     //pinModes[pin] = mode;
-	pinRegister[pin].mode = mode; 
+    pinRegister[pin].mode = mode; 
   } 
 }
 
@@ -227,17 +234,17 @@ char asipClass::getServiceId(byte pin)
 {
   char svc = '?';
   if( pin >=0 && pin < NUM_DIGITAL_PINS) {
-	
-	if( pinRegister[pin].mode == OTHER_SERVICE_MODE){
+    
+    if( pinRegister[pin].mode == OTHER_SERVICE_MODE){
        svc =  (char) pinRegister[pin].service + '@';
-	 }
-	else if( pinRegister[pin].mode == RESERVED_MODE) {
-      svc = '@';	  
-    }	
-	else
-	  svc = id_IO_SERVICE;
-  }        	
-   return svc;	
+     }
+    else if( pinRegister[pin].mode == RESERVED_MODE) {
+      svc = '@';      
+    }   
+    else
+      svc = id_IO_SERVICE;
+  }         
+   return svc;  
 }
 
  
@@ -253,7 +260,7 @@ void asipClass::sendPinModes()  // sends a list of all pin modes
   serial->write('{');
   for(byte p=0; p < NUM_DIGITAL_PINS; p++) {
      //int mode = (char)pinModes[p]; 
-	 int mode = (char)getPinMode(p);
+     int mode = (char)getPinMode(p);
      serial->print( mode); 
      if( p != NUM_DIGITAL_PINS-1)
         serial->write(',');
@@ -274,14 +281,14 @@ void asipClass::sendPinServicesList() // sends a list of all pins with associate
   serial->write('{');
   for(byte p=0; p < NUM_DIGITAL_PINS; p++) {
      //int mode = (char)pinModes[p]; 
-	 int svc = (char)getServiceId(p);
+     int svc = (char)getServiceId(p);
      serial->write( svc ); 
-	 serial->write( ':' ); 	
-	 asipServiceClass* svcPtr = serviceFromId(svc);
-	 if( svcPtr != NULL)
-         svcPtr->reportName(serial);	 
-     else 	
-         serial->print('?');	 
+     serial->write( ':' );  
+     asipServiceClass* svcPtr = serviceFromId(svc);
+     if( svcPtr != NULL)
+         svcPtr->reportName(serial);     
+     else   
+         serial->print('?');     
      if( p != NUM_DIGITAL_PINS-1)
         serial->write(',');
       else  
@@ -300,9 +307,9 @@ void asipClass::sendPinCapabilites()  // sends a bitfield array indicating capab
   serial->write('{');
   for(byte p=0; p < NUM_DIGITAL_PINS; p++) {
      capabilityMask mask;
-	 mask.bits.DIGITAL_IO = 1;; // assume all pins can do digital IO
-	 IS_PIN_ANALOG(p) ? mask.bits.ANALOG_INPUT = 1 :  mask.bits.ANALOG_INPUT = 0;
-	 IS_PIN_PWM(p)    ? mask.bits.PWM_OUTPUT = 1 : mask.bits.PWM_OUTPUT = 0 ;    
+     mask.bits.DIGITAL_IO = 1;; // assume all pins can do digital IO
+     IS_PIN_ANALOG(p) ? mask.bits.ANALOG_INPUT = 1 :  mask.bits.ANALOG_INPUT = 0;
+     IS_PIN_PWM(p)    ? mask.bits.PWM_OUTPUT = 1 : mask.bits.PWM_OUTPUT = 0 ;    
      serial->write( mask.ch + '0'); // convert to a printable character 
      if( p != NUM_DIGITAL_PINS-1)
         serial->write(',');
@@ -383,8 +390,8 @@ void asipServiceClass::begin(byte _nbrElements, serviceBeginCallback_t serviceBe
   autoInterval = 0; // turn off auto events
   if(serviceBeginCallback != NULL) {
     if( serviceBeginCallback(ServiceId) == false) {
-	   // service failed to start
-	}	
+       // service failed to start
+    }   
   }  
 }
 
@@ -408,8 +415,8 @@ void asipServiceClass::reportValues(Stream *stream)
   stream->write('{');
   for(byte count = 0; count < nbrElements; count++){   
       reportValue(count, stream);
-	  if(count < nbrElements-1)
-	     stream->write(',');  // comma between all but last element
+      if(count < nbrElements-1)
+         stream->write(',');  // comma between all but last element
   }
   stream->write('}');
   stream->write(MSG_TERMINATOR); 

@@ -15,7 +15,7 @@
 #include "Arduino.h"
 
 #define PRINTF_DEBUG
-#define VERBOSE_DEBUG(X) //X  // uncomment x to enable verbose debug
+#define VERBOSE_DEBUG(X) X  // uncomment x to enable verbose debug
 
 
 /* Version numbers for the protocol.  
@@ -133,6 +133,7 @@ public:
   void begin(Stream *s, int svcCount, asipServiceClass *serviceArray[], char *sketchName );
   asipErr_t registerPinMode(byte pin, pinMode_t mode, char serviceId);
   asipErr_t reserve(byte pin); 
+  asipErr_t reserveSerialPins();
   void service();
   void sendPortMap(); 
   void sendPinModes(); 

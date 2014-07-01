@@ -22,11 +22,11 @@ const byte NBR_SERVOS =1;
 Servo myServos[NBR_SERVOS];  // create servo objects
 
 const pinArray_t servoPins[] = {18};     // analog pin 4
-extern const pinArray_t servoPins[NBR_SERVOS]; //this declaration tests for correct nbr of pin initializers
+asipCHECK_PINS(servoPins[NBR_SERVOS]);  // compiler will check if the number of pins is same as number of servos
 
 const byte NBR_DISTANCE_SENSORS = 1;
 const pinArray_t distancePins[] = {19};  // analog pin 5 
-extern const pinArray_t distancePins[NBR_DISTANCE_SENSORS]; //this declaration tests for correct nbr of pin initializers
+asipCHECK_PINS(distancePins[NBR_DISTANCE_SENSORS]); //this declaration tests for correct nbr of pin initializers
 
 // create the services
 robotMotorClass motors(id_MOTOR_SERVICE, NO_EVENT);
@@ -54,8 +54,8 @@ void setup() {
   
   asip.begin(&Serial, nbrServices, (asipServiceClass **)&services, sketchName); 
   asipIO.begin(); 
-  asip.registerPinMode(0,RESERVED_MODE,SYSTEM_SERVICE_ID);  // reserve pins used by the serial port 
-  asip.registerPinMode(1,RESERVED_MODE,SYSTEM_SERVICE_ID);
+  asip.reserve(SERIAL_RX_PIN);  // reserve pins used by the serial port 
+  asip.reserve(SERIAL_TX_PIN);  // these defines are in asip/boards.h
   // start the services
   motors.begin(2,6,motorPins); // two motors that use a total of 6 pins  
   encoders.begin(2,4,encoderPins); // two encoders that use a total of 4 pins 
@@ -65,6 +65,14 @@ void setup() {
   //asipServos.begin(NBR_SERVOS,servoPins,myServos);
   asip.sendPinModes(); // for debug
   asip.sendPortMap(); 
+
+  for(int i=0; i< nbrServices; i++)
+  {
+    services[i]->reportName(&Serial); 
+    Serial.print(" is service ");
+    Serial.write(services[i]->getServiceId());
+    Serial.println();  
+  }
 }
 
 void loop() 

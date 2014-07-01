@@ -27,7 +27,7 @@ Servo myServos[NBR_SERVOS];  // create servo objects
 char * sketchName = "TestIO";
 // the order of the following pins is service specific, see the service definition for details
 const pinArray_t servoPins[] = {SERVO};
-extern const pinArray_t servoPins[NBR_SERVOS]; //this declaration tests for correct nbr of pin initializers
+asipCHECK_PINS(servoPins[NBR_SERVOS]);  // compiler will check if the number of pins is same as number of servos
 
 const byte NBR_DISTANCE_SENSORS = 1;
 const pinArray_t distancePins[] = {DISTANCE};
@@ -50,14 +50,22 @@ void setup() {
   
   asip.begin(&Serial, nbrServices, (asipServiceClass **)&services, sketchName ); 
   asipIO.begin(); // start the IO service
-  asip.registerPinMode(0,RESERVED_MODE,SYSTEM_SERVICE_ID);  // reserve pins used by the serial port 
-  asip.registerPinMode(1,RESERVED_MODE,SYSTEM_SERVICE_ID); 
+  asip.reserve(SERIAL_RX_PIN);  // reserve pins used by the serial port 
+  asip.reserve(SERIAL_TX_PIN);  // these defines are in asip/boards.h 
   asipDistance.begin(NBR_DISTANCE_SENSORS,distancePins); 
   asipServos.begin(NBR_SERVOS,servoPins,myServos);
   asip.sendPinModes(); // for debug
   asip.sendPortMap();
+  for(int i=0; i< nbrServices; i++)
+  {
+    services[i]->reportName(&Serial); 
+    Serial.print(" is service ");
+    Serial.write(services[i]->getServiceId());
+    Serial.println();  
+  }
 }
 
+ 
 void loop() 
 {
   asip.service();

@@ -23,7 +23,7 @@
 // Distance detect service
 const char id_DISTANCE_SERVICE = 'D';
 // methods
-// enable auto events - use system define, AUTOEVENT_REQUEST ('A') to request autoevents
+// enable auto events - use system define, tag_AUTOEVENT_REQUEST ('A') to request autoevents
 const char  tag_DISTANCE_MEASURE = 'M';   // measure and send a single event 
 // events use system tag: SERVICE_EVENT  ('e')
 

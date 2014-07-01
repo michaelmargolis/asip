@@ -31,8 +31,8 @@ void asipDistanceClass::remapPins(Stream *stream)
    int count = stream->parseInt();
    if( count == pinCount && count <= nbrElements) {
        for(int i=0; i < count; i++){
-	   // todo 
-       }	      
+       // todo 
+       }          
    }
    else {
      // error message

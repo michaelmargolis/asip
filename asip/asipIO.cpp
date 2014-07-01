@@ -57,13 +57,13 @@ void asipIOClass::reset()
   for( byte p = 0; p < NUM_DIGITAL_PINS; p++) {
     if( asip.getPinMode(p) < RESERVED_MODE) {  
        if( asip.deregisterPinMode(p) == ERR_NO_ERROR){
-	    // here if pin not  reserved or owned by other services
-		pinMode(p, INPUT); // this is the default Arduino pin state at startu-up
-	   }
-	   else{
-	    printf("Error de-registering pin %d\n", p);
-	  }
-	 }
+        // here if pin not  reserved or owned by other services
+        pinMode(p, INPUT); // this is the default Arduino pin state at startu-up
+       }
+       else{
+        printf("Error de-registering pin %d\n", p);
+      }
+     }
    }
 }
 
@@ -82,7 +82,7 @@ void asipIOClass::reportValue(int sequenceId, Stream * stream)  // send the valu
     stream->write(tag_ANALOG_VALUE);
     stream->write(',');
     stream->print(nbrActiveAnalogPins);
-	stream->write(',');  // comma added 21 June 2014
+    stream->write(',');  // comma added 21 June 2014
     stream->write('{');
     for( byte pin=0, count=0; pin < MAX_ANALOG_INPUTS; pin++) {     
       if( analogInputsToReport & (1U << pin) ) { 
@@ -107,36 +107,19 @@ void asipIOClass::processRequestMsg(Stream *stream)
    if( request == tag_PIN_MODE || request == tag_DIGITAL_WRITE || request == tag_ANALOG_WRITE) {
      pin = stream->parseInt();
      value = stream->parseInt();
-     VERBOSE_DEBUG( printf("Request %d for pin %d with val=%d\n", request, pin,value);)
+     VERBOSE_DEBUG( printf("Request %d for pin %d with val=%d\n", request, pin,value));
    }
    asipErr_t err = ERR_NO_ERROR;   
    switch(request) {
-      case tag_ANALOG_DATA_REQUEST:  
-          setAutoreport(stream);       
-          break;
-      case tag_GET_PORT_TO_PIN_MAPPING:
-          asip.sendPortMap();
-          break;
-      case tag_GET_PIN_MODES:
-          asip.sendPinModes();
-          break;
-	  case tag_GET_PIN_CAPABILITIES:
-           asip.sendPinCapabilites();
-           break;		   
-      case tag_PIN_MODE:
-          err = PinMode(stream, pin, value);      
-          break;
-	  case tag_GET_PIN_SERVICES_LIST:
-           asip.sendPinServicesList();	  
-		   break;
-      case tag_DIGITAL_WRITE:
-         err = DigitalWrite(pin,value);         
-         break; 
-      case tag_ANALOG_WRITE:
-         err = AnalogWrite(pin,value);      
-         break;
-      default:
-         err = ERR_UNKNOWN_REQUEST;       
+      case tag_AUTOEVENT_REQUEST:       setAutoreport(stream);             break;
+      case tag_GET_PORT_TO_PIN_MAPPING: asip.sendPortMap();                break;
+      case tag_GET_PIN_MODES:           asip.sendPinModes();               break;
+      case tag_GET_PIN_CAPABILITIES:    asip.sendPinCapabilites();         break;          
+      case tag_PIN_MODE:                err = PinMode(stream, pin, value); break;
+      case tag_GET_PIN_SERVICES_LIST:   asip.sendPinServicesList();        break;
+      case tag_DIGITAL_WRITE:           err = DigitalWrite(pin,value);     break; 
+      case tag_ANALOG_WRITE:            err = AnalogWrite(pin,value);      break;
+      default:                          err = ERR_UNKNOWN_REQUEST;       
    }
    if( err != ERR_NO_ERROR){
        asip.sendErrorMessage(id_IO_SERVICE, request, err, stream);
@@ -327,7 +310,7 @@ void reportDigitalPins(Stream *stream, byte pin, boolean report)
    byte mask = digitalPinToBitMask(pin);  
    if(report) {
       reportPinMasks[portIndex] |= mask;
-	   sendDigitalPortChanges(stream,true);
+       sendDigitalPortChanges(stream,true);
     }
     else
       reportPinMasks[portIndex] &= (~mask);
@@ -350,7 +333,7 @@ void sendDigitalPortChanges(Stream * stream, bool sendIfNotChanged)
             stream->print(port);
             stream->write(',');
             stream->print(data,HEX); 
-            stream->write(MSG_TERMINATOR); 			
+            stream->write(MSG_TERMINATOR);          
             previousPINs[i] = data; 
          }  
       }
