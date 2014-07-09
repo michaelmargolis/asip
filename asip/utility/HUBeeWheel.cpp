@@ -188,9 +188,16 @@ void encodersBegin()
   pinMode(wheel_2QeiAPin, INPUT_PULLUP);
   pinMode(wheel_1QeiBPin, INPUT_PULLUP);
   pinMode(wheel_2QeiBPin, INPUT_PULLUP);
-
+#if defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__)
+  attachInterrupt(2, QEI_wheel_1, CHANGE);
+  // pin change interrupt for pin 21
+  *digitalPinToPCMSK(wheel_2QeiAPin) |= bit (digitalPinToPCMSKbit(wheel_2QeiAPin));  // enable pin
+  PCIFR  |= bit (digitalPinToPCICRbit(wheel_2QeiAPin)); // clear any outstanding interrupt
+  PCICR  |= bit (digitalPinToPCICRbit(wheel_2QeiAPin)); // enable interrupt for the group
+#else  
   attachInterrupt(1, QEI_wheel_1, CHANGE);
   attachInterrupt(0, QEI_wheel_2, CHANGE);
+  #endif
 }
 
 void encodersReset()
@@ -278,3 +285,10 @@ void QEI_wheel_2()
   //if you get here then A has gone low and B is low
   encoderData.count[WHEEL2]++;
 }
+
+// only used for pin change interrupts
+ISR (PCINT2_vect) // handle pin change interrupt for vector 2
+{
+   // for now, we assume any interrupt is for wheel 2 -- TODO
+   QEI_wheel_2();
+}  

@@ -204,7 +204,7 @@ void irLineSensorClass::reportValues(Stream *stream)
 {
    // turn on IR emitters
    digitalWrite(pins[0], HIGH);
-   delay(5);
+   delayMicroseconds(200); // reduced delay time 1 July 2014
    asipServiceClass::reportValues(stream);
     // turn off IR emitters
    digitalWrite(pins[0], LOW);

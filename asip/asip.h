@@ -156,7 +156,7 @@ private:
   unsigned int previousTick;
   asipServiceClass **services;
   int nbrServices; 
-  pinRegistration_t pinRegister[NUM_DIGITAL_PINS];
+  pinRegistration_t pinRegister[TOTAL_PINCOUNT];
   boolean I2C_Started;
 
   void processSystemMsg();

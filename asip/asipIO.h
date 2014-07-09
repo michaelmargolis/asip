@@ -21,8 +21,8 @@ const byte MAX_ANALOG_INPUTS = min(NUM_ANALOG_INPUTS, sizeof(unsigned int) *8); 
 const char id_IO_SERVICE    = 'I';   // tag indicating message is for the low level I/O layer
 // IO Methods (messages to Arduino)
 const char tag_PIN_MODE      = 'P';   // i/o request  to Arduino to set pin mode
-const char tag_DIGITAL_WRITE = 'a';   // i/o request  to Arduino is digitalWrite - changed from 'A' to 'a'
-const char tag_ANALOG_WRITE  = 'd';   // i/o request to Arduino is analogWrite)    changed from 'D" to 'd' 
+const char tag_DIGITAL_WRITE = 'd';   // i/o request  to Arduino is digitalWrite - changed from 'D' to 'd'
+const char tag_ANALOG_WRITE  = 'a';   // i/o request to Arduino is analogWrite)    changed from 'A' to 'a' 
 // info requests to Arduino
 // note that requests for analog data events are with the  system tag_AUTOEVENT_REQUEST tag (changed 1 July)
 const char tag_GET_PORT_TO_PIN_MAPPING = 'M'; // gets a list of pins associated with ports 
@@ -51,8 +51,8 @@ public:
    void processRequestMsg(Stream *stream);
 private:
    void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);
-   void reportAnalogPin(byte pin,boolean report);  // sets pin mode and flag for unsolicited messages
-   void reportDigitalPin(byte pin,boolean report); // sets pin mode and flag for unsolicited messages
+   void setAnalogPinAutoReport(byte pin,boolean report);  // sets pin mode and flag for unsolicited messages
+   void setDigitalPinAutoReport(byte pin,boolean report); // sets pin mode and flag for unsolicited messages
    asipErr_t PinMode(Stream *stream, byte pin, int mode);
    asipErr_t AnalogWrite(byte pin, int value);  
    asipErr_t DigitalWrite(byte pin, byte value); 

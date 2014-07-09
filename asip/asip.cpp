@@ -31,7 +31,7 @@ void asipClass::begin(Stream *s, int svcCount, asipServiceClass **serviceArray, 
   nbrServices = svcCount; 
   autoEventTickDuration = 1; // one millisecond between event counter ticks (TODO?)
   // set all pins to UNALLOCATED_PIN state
-  for(byte p=0; p < NUM_DIGITAL_PINS; p++) {
+  for(byte p=0; p < TOTAL_PINCOUNT; p++) {
      setPinMode(p, UNALLOCATED_PIN_MODE);
   }
    programName = sketchName;
@@ -112,7 +112,7 @@ void asipClass::processSystemMsg()
       serial->write(',');
       serial->print(CHIP_NAME);
       serial->write(',');
-      serial->print(NUM_DIGITAL_PINS);
+      serial->print(TOTAL_PINCOUNT);
       serial->write(',');
       serial->print(programName);
       serial->write(MSG_TERMINATOR);
@@ -134,7 +134,7 @@ asipErr_t asipClass::registerPinMode(byte pin, pinMode_t mode, char serviceId)
 {
   asipErr_t err = ERR_NO_ERROR;
   // Serial.print("PIN in reg =") ; Serial.println(pin);    
-  if(pin >= 0 && pin < NUM_DIGITAL_PINS) {     
+  if(pin >= 0 && pin < TOTAL_PINCOUNT) {     
   // Serial.print("mode in reg =") ; Serial.println(pinModes[pin]); 
     // only system can set RESERVE_MODE
     if( (mode == RESERVED_MODE && serviceId == SYSTEM_SERVICE_ID) || isValidServiceId(serviceId) ){
@@ -157,12 +157,12 @@ asipErr_t asipClass::registerPinMode(byte pin, pinMode_t mode, char serviceId)
   return err;
 }
 
-// only used when for system reset requests
+// only used for system reset requests
 asipErr_t asipClass::deregisterPinMode(byte pin)
 {
   asipErr_t err = ERR_NO_ERROR;
   // Serial.print("PIN in dereg =") ; Serial.println(pin);    
-  if(pin >= 0 && pin < NUM_DIGITAL_PINS) {     
+  if(pin >= 0 && pin < TOTAL_PINCOUNT) {     
     if( getPinMode(pin) < RESERVED_MODE) {    
       setPinMode(pin,UNALLOCATED_PIN_MODE);  
       //Serial.print("register ");Serial.print(pin); Serial.print(" for mode "); Serial.println(mode);         
@@ -211,7 +211,7 @@ asipServiceClass*  asipClass::serviceFromId( char tag)
 // Sets the mode of the given pin 
 void asipClass::setPinMode(byte pin, pinMode_t mode) 
 {
-  if( pin >=0 && pin < NUM_DIGITAL_PINS) {
+  if( pin >=0 && pin < TOTAL_PINCOUNT) {
     //pinModes[pin] = mode;
     pinRegister[pin].mode = mode; 
   } 
@@ -220,7 +220,7 @@ void asipClass::setPinMode(byte pin, pinMode_t mode)
 // returns the mode of the given pin 
 pinMode_t asipClass::getPinMode(byte pin) 
 {
-  if( pin >=0 && pin < NUM_DIGITAL_PINS) {
+  if( pin >=0 && pin < TOTAL_PINCOUNT) {
     return (pinMode_t)pinRegister[pin].mode;
     //return pinModes[pin];
   }
@@ -233,7 +233,7 @@ pinMode_t asipClass::getPinMode(byte pin)
 char asipClass::getServiceId(byte pin) 
 {
   char svc = '?';
-  if( pin >=0 && pin < NUM_DIGITAL_PINS) {
+  if( pin >=0 && pin < TOTAL_PINCOUNT) {
     
     if( pinRegister[pin].mode == OTHER_SERVICE_MODE){
        svc =  (char) pinRegister[pin].service + '@';
@@ -255,14 +255,14 @@ void asipClass::sendPinModes()  // sends a list of all pin modes
   serial->write(',');
   serial->write(tag_PIN_MODES);
   serial->write(',');
-  serial->print(NUM_DIGITAL_PINS);
+  serial->print(TOTAL_PINCOUNT);
   serial->write(',');  // comma added 21 June 2014
   serial->write('{');
-  for(byte p=0; p < NUM_DIGITAL_PINS; p++) {
+  for(byte p=0; p < TOTAL_PINCOUNT; p++) {
      //int mode = (char)pinModes[p]; 
      int mode = (char)getPinMode(p);
      serial->print( mode); 
-     if( p != NUM_DIGITAL_PINS-1)
+     if( p != TOTAL_PINCOUNT-1)
         serial->write(',');
       else  
         serial->println("}");
@@ -276,10 +276,10 @@ void asipClass::sendPinServicesList() // sends a list of all pins with associate
   serial->write(',');
   serial->write(tag_PIN_SERVICES_LIST);
   serial->write(',');
-  serial->print(NUM_DIGITAL_PINS);
+  serial->print(TOTAL_PINCOUNT);
   serial->write(',');  // comma added 21 June 2014
   serial->write('{');
-  for(byte p=0; p < NUM_DIGITAL_PINS; p++) {
+  for(byte p=0; p < TOTAL_PINCOUNT; p++) {
      //int mode = (char)pinModes[p]; 
      int svc = (char)getServiceId(p);
      serial->write( svc ); 
@@ -289,7 +289,7 @@ void asipClass::sendPinServicesList() // sends a list of all pins with associate
          svcPtr->reportName(serial);     
      else   
          serial->print('?');     
-     if( p != NUM_DIGITAL_PINS-1)
+     if( p != TOTAL_PINCOUNT-1)
         serial->write(',');
       else  
         serial->println("}");
@@ -297,21 +297,23 @@ void asipClass::sendPinServicesList() // sends a list of all pins with associate
 }
 void asipClass::sendPinCapabilites()  // sends a bitfield array indicating capabilities all pins 
 {
+  capabilityMask mask;
+  
   serial->write(EVENT_HEADER);
   serial->write(id_IO_SERVICE);
   serial->write(',');
   serial->write(tag_PIN_CAPABILITIES);
   serial->write(',');
-  serial->print(NUM_DIGITAL_PINS); // for now we assume that total number of pins equals NUM_DIGITAL_PINS
+  serial->print(TOTAL_PINCOUNT); 
   serial->write(',');  // comma added 21 June 2014
   serial->write('{');
-  for(byte p=0; p < NUM_DIGITAL_PINS; p++) {
-     capabilityMask mask;
-     mask.bits.DIGITAL_IO = 1;; // assume all pins can do digital IO
+  for(byte p=0; p < TOTAL_PINCOUNT; p++) {
+     mask.ch = 0; // clear the mask
+     IS_PIN_DIGITAL(p) ? mask.bits.DIGITAL_IO = 1 : mask.bits.DIGITAL_IO = 0;
      IS_PIN_ANALOG(p) ? mask.bits.ANALOG_INPUT = 1 :  mask.bits.ANALOG_INPUT = 0;
      IS_PIN_PWM(p)    ? mask.bits.PWM_OUTPUT = 1 : mask.bits.PWM_OUTPUT = 0 ;    
      serial->write( mask.ch + '0'); // convert to a printable character 
-     if( p != NUM_DIGITAL_PINS-1)
+     if( p != TOTAL_PINCOUNT-1)
         serial->write(',');
       else  
         serial->println("}");
@@ -320,22 +322,30 @@ void asipClass::sendPinCapabilites()  // sends a bitfield array indicating capab
 
 void asipClass::sendPortMap()
 {
-  // note that port numbers do not start at 0 and may not be consecutive
+byte port,mask;
+  // note that port numbers may not start at 0 and may not be consecutive
+  // pins that have no digital capability have port and mask values of 0 
   serial->write(EVENT_HEADER);
   serial->write(id_IO_SERVICE);
   serial->write(',');
   serial->write(tag_GET_PORT_TO_PIN_MAPPING);
   serial->write(',');
-  serial->print(NUM_DIGITAL_PINS);
+  serial->print(TOTAL_PINCOUNT);
   serial->write(',');  // comma added 21 June 2014
   serial->write('{');
-  for(byte p=0; p < NUM_DIGITAL_PINS; p++) {
-     byte port = digitalPinToPort(p);
-     byte mask = digitalPinToBitMask(p);
-     serial->print(port);
+  for(byte p=0; p < TOTAL_PINCOUNT; p++) {
+    if(IS_PIN_DIGITAL(p)) {
+       port = DIGITAL_PIN_TO_PORT(p);
+  	   // long port = (long)digitalPinToPortReg(p);
+       mask = DIGITAL_PIN_TO_MASK(p);
+    }	
+	else {
+	   port = mask = 0;
+	}
+     serial->print(port,HEX);
      serial->write(':');
      serial->print(mask, HEX); // note the mask is sent as Hex
-     if( p != NUM_DIGITAL_PINS-1)
+     if( p != TOTAL_PINCOUNT-1)
         serial->write(',');
       else  
         serial->println("}");

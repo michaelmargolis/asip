@@ -26,7 +26,7 @@ asipServoClass::asipServoClass(const char svcId, const char evtId)
   myServoPtr = servoPtr; 
   for(int i=0; i < nbrElements; i++) {     
      myServoPtr[i].attach(pins[i]);
-     printf("Attaching servo id %d to pin %d\n", i, pins[i]);
+    // printf("Attaching servo id %d to pin %d\n", i, pins[i]);
    }
 }
 
