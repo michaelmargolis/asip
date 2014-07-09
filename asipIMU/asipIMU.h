@@ -29,7 +29,7 @@ const char id_GYRO_SERVICE = 'G';
 const char  GYRO_REQUEST = 'R';   // enable auto events
 const char  GYRO_MEASURE = 'M';   // measure and send a single event 
 // events
-const char  GYRO_EVENT =   'e';
+
 
 // Accelerometer service
 const char id_ACCELEROMETER_SERVICE = 'A';
@@ -37,7 +37,7 @@ const char id_ACCELEROMETER_SERVICE = 'A';
 const char  tag_ACCELEROMETER_REQUEST = 'R';   // enable auto events
 const char  tag_ACCELEROMETER_MEASURE = 'M';   // measure and send a single event 
 // events
-const char  tag_ACCELEROMETER_EVENT =   'e';
+
 
 // Heading (Magnetometer) service 
 const char id_HEADING_SERVICE = 'H';
@@ -45,7 +45,7 @@ const char id_HEADING_SERVICE = 'H';
 const char  tag_HEADING_REQUEST = 'R';   // enable auto events
 const char  tag_HEADING_MEASURE = 'M';   // measure and send a single event 
 // events
-const char  tag_HEADING_EVENT =   'e';
+
 
 // Pressure (Altitude) service 
 const char id_PRESSURE_SERVICE = 'P';
@@ -53,11 +53,12 @@ const char id_PRESSURE_SERVICE = 'P';
 const char  tag_PRESSURE_REQUEST = 'R';   // enable auto events
 const char  tag_PRESSURE_MEASURE = 'M';   // measure and send a single event 
 // events
-const char  tag_PRESSURE_EVENT =   'e';
+
 
 const int NBR_GYRO_AXIS  = 3;
 const int NBR_ACCEL_AXIS = 3;
 const int NBR_MAG_AXIS   = 4; // 4th element is the calculated Heading direction
+const int NBR_PRESSURE_FIELDS = 3; //pressure in mb, temperature C, altitude in meters
 
 class gyroClass : public asipServiceClass
 {  
@@ -109,12 +110,14 @@ class PressureClass : public asipServiceClass
 public:
 
    PressureClass(const char svcId);  
-   void begin(byte nbrElements);   // classes that use I2C instead of specific pins use this begin method
+   void begin(byte nbrElements,serviceBeginCallback_t serviceBeginCallback);   // classes that use I2C instead of specific pins use this begin method
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device
+   void reportValues(Stream *stream); // send all values separated by commas, preceded by header and terminated with newline  
    void processRequestMsg(Stream *stream);
    void reset();
 private:
-   int readAxis(int sequenceId);
+   float field[NBR_PRESSURE_FIELDS];
+   int32_t lastMicros; // time of the previous readings
 };
 
 extern gyroClass gyro3Axis; 
