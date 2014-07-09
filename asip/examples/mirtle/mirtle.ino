@@ -8,15 +8,24 @@
 #include <Servo.h> // needed for the servo service 
 
 char * sketchName = "Mirtle";
-
 // the order of the following pins is service specific, see the service definition for details
-const pinArray_t motorPins[] = {8,11,9,12,13,10};
-const pinArray_t encoderPins[] = {wheel_1QeiAPin,wheel_1QeiBPin, // defined in HUBeeWheel.h
-                                  wheel_2QeiAPin,wheel_2QeiBPin}; 
+
+#if defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__)
+const pinArray_t motorPins[] = {18,19,3,22,23,4};
+const pinArray_t bumpPins[] = {12,15};
+// note that analog pins are referred to by their digital number (on uno, 15 = analog 1, 16 =analog 2...)
+//const pinArray_t irReflectancePins[] = {30,29,31,28}; // first is control, the remainder are used as analog inputs
+const pinArray_t irReflectancePins[] = {25,27,24,26}; // first is control, the remainder are used as analog inputs
+#else
+const pinArray_t motorPins[] = {8,11,9,12,13,10}; 
 const pinArray_t bumpPins[] = {6,5};
 // note that analog pins are referred to by their digital number (on uno, 15 = analog 1, 16 =analog 2...)
 const pinArray_t irReflectancePins[] = {14,15,16,17}; // first is control, the remainder are used as analog inputs
+#endif
 
+// encoder pin constants for supported boards are defined in HUBeeWheel.h
+const pinArray_t encoderPins[] = {wheel_1QeiAPin,wheel_1QeiBPin, // defined in HUBeeWheel.h
+                                  wheel_2QeiAPin,wheel_2QeiBPin};
 //declare servo object(s) 
 const byte NBR_SERVOS =1;
 Servo myServos[NBR_SERVOS];  // create servo objects

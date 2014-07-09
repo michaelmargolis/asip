@@ -9,6 +9,7 @@
 #include "I2Cdev.h"   // needed for above  
 #include "MPU6050.h"
 #include "HMC5883L.h"
+#include "BMP085.h"
 
 // some defines for some test hardware
 #define SWITCH 13
@@ -40,6 +41,8 @@ bool i2cStarted = false; // flag to indcate that i2c started
 gyroClass gyro3Axis(id_GYRO_SERVICE); 
 AccelerometerClass accelerometer3Axis(id_ACCELEROMETER_SERVICE); 
 HeadingClass heading3Axis(id_HEADING_SERVICE);
+PressureClass pressure(id_PRESSURE_SERVICE);
+
 asipServoClass asipServos(id_SERVO_SERVICE, NO_EVENT);
 
 asipServiceClass *services[] = { 
@@ -47,6 +50,7 @@ asipServiceClass *services[] = {
                                  &gyro3Axis,
                                  &accelerometer3Axis,
                                  &heading3Axis,
+                                 &pressure,
                                  &asipServos };
 
 int nbrServices = sizeof(services) / sizeof(asipServiceClass*);
@@ -64,6 +68,8 @@ void setup() {
   gyro3Axis.begin(NBR_GYRO_AXIS,startI2C); // I2C services use begin method with nbr of elements (axis) & start callback
   accelerometer3Axis.begin(NBR_ACCEL_AXIS,startI2C); // gyro and accel have x,y,z axis 
   heading3Axis.begin(NBR_MAG_AXIS,startI2C); // 3 raw values, 4th element is the calculated compass heading 
+  pressure.begin(NBR_PRESSURE_FIELDS,startI2C); // pressure, tempearture and altitude
+  
   asipServos.begin(NBR_SERVOS,servoPins,myServos);
   asip.sendPinModes(); // for debug
   asip.sendPortMap();
