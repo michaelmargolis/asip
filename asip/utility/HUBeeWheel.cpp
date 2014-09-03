@@ -286,9 +286,13 @@ void QEI_wheel_2()
   encoderData.count[WHEEL2]++;
 }
 
+#if defined (__MK20DX256__) // not for Teensy 3.1
+// todo
+#else
 // only used for pin change interrupts
 ISR (PCINT2_vect) // handle pin change interrupt for vector 2
 {
    // for now, we assume any interrupt is for wheel 2 -- TODO
    QEI_wheel_2();
 }  
+#endif

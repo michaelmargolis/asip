@@ -1,8 +1,8 @@
 #include <asip.h>       // the base class definitions
 #include <asipIO.h>     // the core I/O class definition
-#include <utility\asipServos.h> // derived definitions for servo    
+#include <utility/asipServos.h> // derived definitions for servo    
 #include <Servo.h>      // needed for the servo service 
-#include <utility\asipDistance.h> // ultrasonics distance sensor
+#include <utility/asipDistance.h> // ultrasonics distance sensor
 
 // some defines for some test hardware
 #define SWITCH 13

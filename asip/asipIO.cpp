@@ -10,9 +10,6 @@
 
 #include "asipIO.h"
 
-//#define ASIP_SERVICE_NAME  ((asipSvcName) "ASIP core IO")
-//THIS_SVC_NAME("ASIP core IO");
-
 
 #ifdef PRINTF_DEBUG
 // mode strings for debug
@@ -22,10 +19,6 @@ char * modeStr[] = {"UNALLOCATED", "INPUT", "INPUT_PULLUP", "OUTPUT", "ANALOG", 
 void AssignPort(byte pin); // store register associated with given pin in register table 
 byte getPortIndex(byte pin); // return index into portRegisterTable associated with given pin
 void checkPinChange();
-
-PROGMEM const prog_char myName[]  = "ASIP core IO";
-//asipSvcName myName[] PROGMEM = "ASIP core IO";
-
 
 // code to support reporting of digital ports
 // allow lots of ports if Mega or Arduino DUE   
@@ -51,9 +44,9 @@ void AssignPort(byte pin)
   byte index = 0;
   while(true) {
      if( portRegisterTable[index] == port) {
-	    //VERBOSE_DEBUG (printf("Assign: pin %d has port index %d (port = %d)\n", pin, index,port));
+        //VERBOSE_DEBUG (printf("Assign: pin %d has port index %d (port = %d)\n", pin, index,port));
         return; // already assigned
-	 }
+     }
      if( index < portCount) {
           index++;
      }
@@ -74,7 +67,7 @@ byte getPortIndex(byte pin)
            VERBOSE_DEBUG (printf("GetPortIndex: Port index for pin %d is %d\n", pin, index));
            return index;
        }
-	   printf("GetPortIndex: looking for %d, index= %d, port = %d\n", port, index, portRegisterTable[index]);	  
+       printf("GetPortIndex: looking for %d, index= %d, port = %d\n", port, index, portRegisterTable[index]);     
    }
    printf("GetPortIndex: Unable to get index for pin %d on port %d\n", pin, port);
    return PORT_ERROR;
@@ -89,12 +82,12 @@ static inline unsigned char readPort(byte port, byte bitmask)
 {
 #if defined(ARDUINO_PINOUT_OPTIMIZE)
         return *portInputRegister(port) & bitmask;
-/*		
+/*      
         if (port == 0) return (PIND & 0xFC) & bitmask; // ignore Rx/Tx 0/1
         if (port == 1) return ((PINB & 0x3F) | ((PINC & 0x03) << 6)) & bitmask;
         if (port == 2) return ((PINC & 0x3C) >> 2) & bitmask;
         return 0;
-*/		
+*/      
 #else
         unsigned char out=0, pin=port*8;
         if (IS_PIN_DIGITAL(pin+0) && (bitmask & 0x01) && digitalRead(PIN_TO_DIGITAL(pin+0))) out |= 0x01;
@@ -115,7 +108,7 @@ void sendDigitalPortChanges(Stream * stream, bool sendIfNotChanged)
       if(reportPinMasks[i] != 0) {
          byte port = portRegisterTable[i];
          //byte data = *portInputRegister(port) & reportPinMasks[i];
-		 byte data =  readPort(port, reportPinMasks[i]);
+         byte data =  readPort(port, reportPinMasks[i]);
          if( (data != previousPINs[i]) || sendIfNotChanged ){            
             stream->write(EVENT_HEADER);
             stream->write(id_IO_SERVICE);
@@ -140,7 +133,7 @@ asipIOClass asipIO(id_IO_SERVICE,tag_ANALOG_VALUE );
   asipIOClass::asipIOClass(const char svcId, const char evtId )
   :asipServiceClass(svcId,evtId )
 {
- svcName = myName;
+ svcName = PSTR("ASIP core IO");
 }
 
 void asipIOClass::begin( )
@@ -258,7 +251,7 @@ void asipIOClass::setDigitalPinAutoReport(byte pin,boolean report)
    byte portIndex = getPortIndex(pin);
    if( portIndex == PORT_ERROR) {
       VERBOSE_DEBUG(printf( "Unable to get port index for pin %d\n", pin));
-	  return;
+      return;
    }
    byte mask = DIGITAL_PIN_TO_MASK(pin);  
    if(report) {
@@ -284,7 +277,7 @@ asipErr_t asipIOClass::PinMode(Stream * stream, byte pin, int mode)
   if (IS_PIN_DIGITAL(pin)) {
     if (mode == INPUT_MODE || mode == INPUT_PULLUP_MODE) {
        setDigitalPinAutoReport(pin,true);  // turn on
-	   sendDigitalPortChanges(stream,true);
+       sendDigitalPortChanges(stream,true);
     } else {
        setDigitalPinAutoReport(pin,false); // turn off
     }
@@ -301,7 +294,7 @@ asipErr_t asipIOClass::PinMode(Stream * stream, byte pin, int mode)
     break;
   case  INPUT_PULLUP_MODE:    
     if (IS_PIN_DIGITAL(pin)) {
-      pinMode(PIN_TO_DIGITAL(pin), INPUT_PULLUP); // disable output driver    	  
+      pinMode(PIN_TO_DIGITAL(pin), INPUT_PULLUP); // disable output driver        
       err = asip.registerPinMode(pin,INPUT_PULLUP_MODE, ServiceId); 
     }
     break;
@@ -317,7 +310,7 @@ asipErr_t asipIOClass::PinMode(Stream * stream, byte pin, int mode)
       digitalWrite(PIN_TO_DIGITAL(pin), LOW); // disable PWM
       pinMode(PIN_TO_DIGITAL(pin), OUTPUT_MODE);
       err = asip.registerPinMode(pin,OUTPUT_MODE, ServiceId);
-	  VERBOSE_DEBUG(  printf("set pin %d to output mode\n", pin);)
+      VERBOSE_DEBUG(  printf("set pin %d to output mode\n", pin);)
 
     }
     break;

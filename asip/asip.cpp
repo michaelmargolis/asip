@@ -29,7 +29,6 @@ void asipClass::begin(Stream *s, int svcCount, asipServiceClass **serviceArray, 
   serial = s;
   services = serviceArray;
   nbrServices = svcCount; 
-  autoEventTickDuration = 1; // one millisecond between event counter ticks (TODO?)
   // set all pins to UNALLOCATED_PIN state
   for(byte p=0; p < TOTAL_PINCOUNT; p++) {
      setPinMode(p, UNALLOCATED_PIN_MODE);
@@ -82,18 +81,15 @@ void asipClass::service()
   
   // auto events for services:
   unsigned int currentTick = millis();
-  if(currentTick - previousTick > autoEventTickDuration) {
-    previousTick += autoEventTickDuration;
-    for(int i=0; i < nbrServices; i++) {
-      if( services[i]->autoInterval > 0) {  // zero disables autoInterval
-          //VERBOSE_DEBUG(  printf("Auto report, tick= %u, trig = %u, interval=%u\n",currentTick,(currentTick - services[i]->nextTrigger),services[i]->autoInterval);)
-         if(services[i]->nextTrigger - currentTick >= services[i]->autoInterval) {
-           services[i]->reportValues(serial);
-           services[i]->nextTrigger =  currentTick + services[i]->autoInterval; // reset the count
-           //VERBOSE_DEBUG( printf("Counter reset to %u\n", services[i]->nextTrigger);) 
-         }      
-      }
-    }
+  for(int i=0; i < nbrServices; i++) {
+    if( services[i]->autoInterval > 0) {  // zero disables autoInterval
+       //VERBOSE_DEBUG(  printf("Auto report, tick= %u, trig = %u, interval=%u\n",currentTick,(currentTick - services[i]->nextTrigger),services[i]->autoInterval);)
+       if(services[i]->nextTrigger - currentTick >= services[i]->autoInterval) {
+         services[i]->reportValues(serial);
+         services[i]->nextTrigger =  currentTick + services[i]->autoInterval; // reset the count
+        //VERBOSE_DEBUG( printf("Counter reset to %u\n", services[i]->nextTrigger);) 
+       }      
+    }    
   }
 }
 
@@ -449,10 +445,10 @@ char asipServiceClass::getServiceId()
 
 void asipServiceClass::reportName(Stream *stream)
 {
-   char c; 
-   const prog_char *str = svcName;
-   while((c = pgm_read_byte(str++))) 
-     stream->write(c);
+  PGM_P name  = this->svcName;
+  for (uint8_t c; (c = pgm_read_byte(name)); name++) {
+    stream->write(c); 
+  }
 }
 
 void asipServiceClass::reportError( const char svc, const char request, asipErr_t errno, Stream *stream)

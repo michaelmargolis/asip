@@ -10,11 +10,10 @@
  
 #include "asipDistance.h"
 
-static PROGMEM const prog_char myName[]  = "Distance";
- 
+
 asipDistanceClass::asipDistanceClass(const char svcId) : asipServiceClass(svcId)
 {
-   svcName = myName;
+   svcName = PSTR("Distance");
 }
 
 // each sensor uses 1 pin

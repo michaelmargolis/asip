@@ -61,8 +61,8 @@
 #define TOTAL_PINCOUNT           32 
 #define IS_PIN_DIGITAL(p)       ((p) >= 0 && (p) < TOTAL_PINCOUNT)
 #define IS_PIN_ANALOG(p)        ((p) >= 24 && (p) < TOTAL_PINCOUNT)
-#define PIN_TO_ANALOG(P)        (P-24)
-#define ANALOG_PIN_TO_DIGITAL   (P+24)
+#define PIN_TO_ANALOG(P)        (31-P)
+#define ANALOG_PIN_TO_DIGITAL   (31-P)
 #define SERIAL_RX_PIN            8
 #define SERIAL_TX_PIN            9
 #define SERIAL1_RX_PIN           10
@@ -88,7 +88,7 @@
 #define PIN_TO_SERVO(p)         (p)
 
 
-// Teensy 3.0
+// Teensy 3.0 and 3.1
 #elif defined(__MK20DX128__) || defined(__MK20DX256__)
 #define TOTAL_PINCOUNT          38 // 24 digital + 10 analog-digital + 4 analog
 #define TOTAL_ANALOG_PINS       14

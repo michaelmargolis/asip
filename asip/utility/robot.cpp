@@ -11,19 +11,13 @@
 #include "robot.h"
 #include "HUBeeWheel.h"
 
-asipSvcName motorName[]   = "Motors";
-asipSvcName encoderName[] = "Encoders";
-asipSvcName bumpName[]    = "Bump Sensors";
-asipSvcName irName[]      = "Reflectance Sensors";
-
-
 //declare two wheel objects - each encapsulates all the control functions for a wheel
 HUBeeBMDWheel wheel[NBR_WHEELS];
 
 robotMotorClass::robotMotorClass(const char svcId, const char evtId)
   :asipServiceClass(svcId)
 {
-  svcName = motorName;
+  svcName = PSTR("Motors");
 }
 
 // each motor uses 3 pins, the array order is: m0In1, m0In2, m0pwm, m1In1, m1In2, m1pwm, ...)
@@ -108,7 +102,7 @@ void robotMotorClass::processRequestMsg(Stream *stream)
 
 encoderClass::encoderClass(const char svcId) : asipServiceClass(svcId)
 {
-  svcName = encoderName; 
+  svcName = PSTR("Encoders");; 
 }
 
 // each encoder uses 2 pins
@@ -152,7 +146,7 @@ void encoderClass::processRequestMsg(Stream *stream)
 
 bumpSensorClass::bumpSensorClass(const char svcId) : asipServiceClass(svcId)
 {
-  svcName = bumpName; "Bump Sensors";
+  svcName = PSTR("Bump Sensors");
 }
 
 void bumpSensorClass::bumpSensorClass::begin(byte nbrElements, byte pinCount, const pinArray_t pins[])
@@ -190,7 +184,7 @@ void bumpSensorClass::processRequestMsg(Stream *stream)
 
 irLineSensorClass::irLineSensorClass(const char svcId) : asipServiceClass(svcId)
 {
-   svcName = irName;
+   svcName = PSTR("IR Sensors");
 }
 
 void irLineSensorClass::begin(byte nbrElements, byte pinCount, const pinArray_t pins[]) 

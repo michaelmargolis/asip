@@ -14,8 +14,8 @@
 #include "boards.h"  // Hardware pin macros
 #include "Arduino.h"
 
-#define PRINTF_DEBUG
-#define VERBOSE_DEBUG(X) X  // uncomment x to enable verbose debug
+//#define PRINTF_DEBUG
+#define VERBOSE_DEBUG(X) //X  // uncomment x to enable verbose debug
 
 
 /* Version numbers for the protocol.  
@@ -28,7 +28,7 @@ const int ASIP_MINOR_VERSION  = 1; // for backwards compatibility
 // error messages
 enum asipErr_t {ERR_NO_ERROR, ERR_INVALID_SERVICE, ERR_UNKNOWN_REQUEST, ERR_INVALID_PIN, ERR_MODE_UNAVAILABLE,
                 ERR_INVALID_MODE, ERR_WRONG_MODE, ERR_INVALID_DEVICE_NUMBER, ERR_DEVICE_NOT_AVAILABLE, ERR_I2C_NOT_ENABLED};
-				
+                
 typedef byte pinArray_t; // the type used by services to provide an array of needed pins 
 typedef bool (*serviceBeginCallback_t)(const char svc);   // callback for services such as I2C that don't explicitly use pins
 
@@ -109,16 +109,14 @@ public:
   virtual void processRequestMsg(Stream *stream) = 0;
   virtual void reportError( const char svc, const char request, asipErr_t errno, Stream *stream); // report service request errors
   virtual void reportName(Stream *stream);
-  virtual char getServiceId();
+  virtual char getServiceId();  
+  PGM_P svcName;
   
-  PROGMEM const prog_char *svcName  ;
 protected:
    const char EventId;         // the unique character that identifies the default event provided by service
    byte nbrElements;           // the number of items supported by this service
    byte pinCount;              // total number of pins in the pins array 
    const pinArray_t *pins;     // stores pins used by this service  
-   //static asipSvcName svcName;        // stores the name of the service in progmem 
-
    
    friend class asipClass; 
    const char ServiceId;       // the unique Upper Case ASCII character that identifies this service 
@@ -152,8 +150,6 @@ private:
 
   Stream *serial;
   char *programName;
-  unsigned int autoEventTickDuration; // the number of milliseconds between each event tick
-  unsigned int previousTick;
   asipServiceClass **services;
   int nbrServices; 
   pinRegistration_t pinRegister[TOTAL_PINCOUNT];

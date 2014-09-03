@@ -1,10 +1,10 @@
 
 #include <asip.h>       // the base class definitions
 #include <asipIO.h>     // the core I/O class definition
-#include "utility\robot.h"       // definitions for mirtle services(motor, ir, encoder etc) 
-#include "utility\HUBeeWheel.h"
-#include <utility\asipDistance.h> // ultrasonics distance sensor
-#include <utility\asipServos.h> // derived definitions for servo
+#include "utility/robot.h"       // definitions for mirtle services(motor, ir, encoder etc) 
+#include "utility/HUBeeWheel.h"
+#include <utility/asipDistance.h> // ultrasonics distance sensor
+#include <utility/asipServos.h> // derived definitions for servo
 #include <Servo.h> // needed for the servo service 
 
 char * sketchName = "Mirtle";
@@ -16,9 +16,9 @@ const pinArray_t bumpPins[] = {12,15};
 // note that analog pins are referred to by their digital number (on uno, 15 = analog 1, 16 =analog 2...)
 //const pinArray_t irReflectancePins[] = {30,29,31,28}; // first is control, the remainder are used as analog inputs
 const pinArray_t irReflectancePins[] = {25,27,24,26}; // first is control, the remainder are used as analog inputs
-#else
-const pinArray_t motorPins[] = {8,11,9,12,13,10}; 
-const pinArray_t bumpPins[] = {6,5};
+#else  // defines for standard Mirto 328 V2 board
+const pinArray_t motorPins[] = {8,11,5,12,13,6}; 
+const pinArray_t bumpPins[] = {9,10};
 // note that analog pins are referred to by their digital number (on uno, 15 = analog 1, 16 =analog 2...)
 const pinArray_t irReflectancePins[] = {14,15,16,17}; // first is control, the remainder are used as analog inputs
 #endif

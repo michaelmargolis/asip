@@ -10,12 +10,10 @@
  
 #include "asipServos.h"
 
-static PROGMEM const prog_char myName[]  =  "Servos";
-
 asipServoClass::asipServoClass(const char svcId, const char evtId)
   :asipServiceClass(svcId)
 {
-   svcName = myName;
+   svcName = PSTR("Servos");
 }
 
 // each servo uses 1 pin
