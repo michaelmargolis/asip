@@ -214,6 +214,7 @@ void asipIOClass::processRequestMsg(Stream *stream)
       case tag_GET_PORT_TO_PIN_MAPPING: asip.sendPortMap();                break;
       case tag_GET_PIN_MODES:           asip.sendPinModes();               break;
       case tag_GET_PIN_CAPABILITIES:    asip.sendPinCapabilites();         break;          
+      case tag_GET_ANALOG_PIN_MAPPING:  asip.sendAnalogPinMap();           break;
       case tag_PIN_MODE:                err = PinMode(stream, pin, value); break;
       case tag_GET_PIN_SERVICES_LIST:   asip.sendPinServicesList();        break;
       case tag_DIGITAL_WRITE:           err = DigitalWrite(pin,value);     break; 

@@ -332,7 +332,6 @@ byte port,mask;
   for(byte p=0; p < TOTAL_PINCOUNT; p++) {
     if(IS_PIN_DIGITAL(p)) {
        port = DIGITAL_PIN_TO_PORT(p);
-  	   // long port = (long)digitalPinToPortReg(p);
        mask = DIGITAL_PIN_TO_MASK(p);
     }	
 	else {
@@ -346,6 +345,34 @@ byte port,mask;
       else  
         serial->println("}");
   } 
+}
+
+void asipClass::sendAnalogPinMap()
+{
+  int pinsToReport = TOTAL_ANALOG_PINS;
+  // sends pairs of digital:analog pin associations
+  serial->write(EVENT_HEADER);
+  serial->write(id_IO_SERVICE);
+  serial->write(',');
+  serial->write(tag_GET_ANALOG_PIN_MAPPING);
+  serial->write(',');
+  serial->print(TOTAL_ANALOG_PINS);
+  serial->write(','); 
+  serial->write('{');
+  for(byte p=0; p < TOTAL_PINCOUNT; p++) {
+    if(IS_PIN_ANALOG(p)) {
+      serial->print(p);
+      serial->write(':');
+      serial->print(PIN_TO_ANALOG(p)); 
+     if( --pinsToReport > 0)
+        serial->write(',');
+      else  
+        serial->println("}");
+    }
+  } 
+  if( pinsToReport != 0) {
+     printf("number of analog pins is off by %d\n", pinsToReport);
+  }
 }
 
 void asipClass::sendErrorMessage( const char svc, const char tag, asipErr_t errno, Stream *stream)

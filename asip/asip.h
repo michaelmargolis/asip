@@ -134,6 +134,7 @@ public:
   asipErr_t reserveSerialPins();
   void service();
   void sendPortMap(); 
+  void sendAnalogPinMap();
   void sendPinModes(); 
   void sendErrorMessage( const char svc, const char tag, asipErr_t errno, Stream *stream); 
 private:

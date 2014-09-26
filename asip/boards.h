@@ -18,6 +18,7 @@
 // TODO see if this can be gleaned from the distributed pins_arduino.h
 #if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__)
 #define TOTAL_PINCOUNT           20 
+#define TOTAL_ANALOG_PINS       6
 #define IS_PIN_DIGITAL(p)       ((p) >= 0 && (p) < TOTAL_PINCOUNT)
 #define IS_PIN_ANALOG(P)        ((P) >= 14 && (P) < 14 + NUM_ANALOG_INPUTS)
 #define PIN_TO_ANALOG(P)        (P-14)
@@ -30,6 +31,7 @@
 
 #elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) 
 #define TOTAL_PINCOUNT           70 
+#define TOTAL_ANALOG_PINS       16
 #define IS_PIN_DIGITAL(p)       ((p) >= 0 && (p) < TOTAL_PINCOUNT)
 #define IS_PIN_ANALOG(p)        ((p) >= 54 && (p) < TOTAL_PINCOUNT)
 #define PIN_TO_ANALOG(P)        (P-54)
@@ -48,17 +50,21 @@
 
 
 #elif defined(__AVR_ATmega32U4__)
-#define TOTAL_PINCOUNT           70 
+#define TOTAL_PINCOUNT          30
+#define TOTAL_ANALOG_PINS       12 
 #define IS_PIN_DIGITAL(p)       ((p) >= 0 && (p) < TOTAL_PINCOUNT)
 #define IS_PIN_ANALOG(p)        ((p) >= 18 && (p) < TOTAL_PINCOUNT)
 #define PIN_TO_ANALOG(P)        (P-18)
 #define ANALOG_PIN_TO_DIGITAL   (P+18)
 #define SERIAL_RX_PIN            0
 #define SERIAL_TX_PIN            1
+#define DIGITAL_PIN_TO_PORT(p)   digitalPinToPort(p)
+#define DIGITAL_PIN_TO_MASK(p)   digitalPinToBitMask(p)
 #define ARDUINO_PINOUT_OPTIMIZE
 
 #elif defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__)
 #define TOTAL_PINCOUNT           32 
+#define TOTAL_ANALOG_PINS       8
 #define IS_PIN_DIGITAL(p)       ((p) >= 0 && (p) < TOTAL_PINCOUNT)
 #define IS_PIN_ANALOG(p)        ((p) >= 24 && (p) < TOTAL_PINCOUNT)
 #define PIN_TO_ANALOG(P)        (31-P)
