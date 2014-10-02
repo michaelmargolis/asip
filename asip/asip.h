@@ -23,7 +23,11 @@
  *  whether it will be compatible with the installed firmware. 
  */ 
 const int ASIP_MAJOR_VERSION  = 0; // for non-compatible changes
-const int ASIP_MINOR_VERSION  = 1; // for backwards compatibility
+const int ASIP_MINOR_VERSION  = 2; // for backwards compatibility
+
+const long ASIP_BAUD  = 57600;      
+
+#define prog_char  char PROGMEM  // for deprecated defines - TODO replace these !!!
 
 // error messages
 enum asipErr_t {ERR_NO_ERROR, ERR_INVALID_SERVICE, ERR_UNKNOWN_REQUEST, ERR_INVALID_PIN, ERR_MODE_UNAVAILABLE,
@@ -113,6 +117,7 @@ public:
   PGM_P svcName;
   
 protected:
+   void setAutoreport(unsigned int ticks); // sets number ticks between events, 0 disables 
    const char EventId;         // the unique character that identifies the default event provided by service
    byte nbrElements;           // the number of items supported by this service
    byte pinCount;              // total number of pins in the pins array 
@@ -124,11 +129,17 @@ protected:
    unsigned int nextTrigger;   // tick value for the next event (note this rolls over after 65 seconds so intervals should be limited to under one minute  
 };
 
+typedef asipServiceClass* asipService;
+
+#define asipServiceCount(s)  (sizeof(s) / sizeof(asipService))
+
+
 class asipClass 
 {
 public:
   asipClass();
-  void begin(Stream *s, int svcCount, asipServiceClass *serviceArray[], char *sketchName );
+  //void begin(Stream *s, int svcCount, asipServiceClass *serviceArray[], char *sketchName );
+  void begin(Stream *s, int svcCount, asipServiceClass (**serviceArray), char *sketchName );
   asipErr_t registerPinMode(byte pin, pinMode_t mode, char serviceId);
   asipErr_t reserve(byte pin); 
   asipErr_t reserveSerialPins();

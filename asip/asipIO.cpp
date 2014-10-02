@@ -7,8 +7,19 @@
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
  */
+ 
+ /*
+   By default, all pins capable of analog input that have not been reserved by other 
+   services will be set to ANALOG_MODE and the autoInterval will be set to 50 milliseconds.
+   This default behaviour can be suppressed by calling the begin method with 
+   the argument: STRICT_PINMODE 
+ */
+ 
 
 #include "asipIO.h"
+
+//#define ASIP_SERVICE_NAME  ((asipSvcName) "ASIP core IO")
+//THIS_SVC_NAME("ASIP core IO");
 
 
 #ifdef PRINTF_DEBUG
@@ -138,12 +149,36 @@ asipIOClass asipIO(id_IO_SERVICE,tag_ANALOG_VALUE );
 
 void asipIOClass::begin( )
 {
-  // arguments are not needed because the hardware is accessed directly through registers
-  analogInputsToReport = 0;
+  if(strictPinMode) {
+    analogInputsToReport = 0;
+    // pins will be set to UNALLOCATED_PIN_MODE
+  }
+  else {
+   // set all pins capable of analog input to ANALOG_MODE 
+    for( byte pin = 0; pin < TOTAL_PINCOUNT; pin++) {
+      if (IS_PIN_ANALOG(pin)) {
+        if (IS_PIN_DIGITAL(pin)) {
+          pinMode(PIN_TO_DIGITAL(pin), INPUT_MODE);    // disable output driver
+          digitalWrite(PIN_TO_DIGITAL(pin), LOW); // disable internal pull-ups
+        }
+        PinMode(pin, ANALOG_MODE);     
+      }
+      else {
+        PinMode(pin, INPUT_MODE);    
+      }
+    }
+    setAutoreport(DEFAULT_ANALOG_AUTO_INTERVAL);
+  }
   memset(portRegisterTable, 0xff,MAX_IO_PORTS); // init table to impossible port values prior to assignment 
   for( byte p = 0; p < NUM_DIGITAL_PINS; p++) {
-     AssignPort(p);
-   }
+    AssignPort(p);
+  }
+}
+
+void asipIOClass::begin( int useStrictPinmode )
+{
+   strictPinMode = (useStrictPinmode == STRICT_PINMODE);
+   begin();
 }
 
 void asipIOClass::begin(byte nbrElements, byte pinCount, const pinArray_t pins[])
@@ -153,6 +188,7 @@ void asipIOClass::begin(byte nbrElements, byte pinCount, const pinArray_t pins[]
 
 void asipIOClass::reset()
 {
+// todo - this needs to properly set the default pin mode !!!
   for( byte p = 0; p < TOTAL_PINCOUNT; p++) {
     if( asip.getPinMode(p) < RESERVED_MODE) {  
        if( asip.deregisterPinMode(p) == ERR_NO_ERROR){
@@ -169,12 +205,16 @@ void asipIOClass::reset()
 
 void asipIOClass::reportValue(int sequenceId, Stream * stream)  // send the value of the given device
 {
+
 }
 
  void asipIOClass::reportValues(Stream *stream)
 {
   // report analog values 
-  if( nbrActiveAnalogPins > 0 )  { 
+  //  if not in strict mode, messages will be sent (with no values between curly braces)
+  //  even if no pins are set to ANALOG_MODE
+ 
+  if( !STRICT_PINMODE || nbrActiveAnalogPins > 0 )  { 
     stream->write(EVENT_HEADER);
     stream->write(ServiceId);
     stream->write(',');
@@ -213,12 +253,16 @@ void asipIOClass::processRequestMsg(Stream *stream)
       case tag_AUTOEVENT_REQUEST:       setAutoreport(stream);             break;
       case tag_GET_PORT_TO_PIN_MAPPING: asip.sendPortMap();                break;
       case tag_GET_PIN_MODES:           asip.sendPinModes();               break;
-      case tag_GET_PIN_CAPABILITIES:    asip.sendPinCapabilites();         break;          
+      case tag_GET_PIN_CAPABILITIES:    asip.sendPinCapabilites();         break; 
       case tag_GET_ANALOG_PIN_MAPPING:  asip.sendAnalogPinMap();           break;
-      case tag_PIN_MODE:                err = PinMode(stream, pin, value); break;
       case tag_GET_PIN_SERVICES_LIST:   asip.sendPinServicesList();        break;
       case tag_DIGITAL_WRITE:           err = DigitalWrite(pin,value);     break; 
       case tag_ANALOG_WRITE:            err = AnalogWrite(pin,value);      break;
+     case tag_PIN_MODE: 
+            err = PinMode(pin, value);  
+            if (value == INPUT_MODE || value == INPUT_PULLUP_MODE) 
+                sendDigitalPortChanges(stream,true);
+            break;                
       default:                          err = ERR_UNKNOWN_REQUEST;       
    }
    if( err != ERR_NO_ERROR){
@@ -228,9 +272,9 @@ void asipIOClass::processRequestMsg(Stream *stream)
 
 void asipIOClass::setAnalogPinAutoReport(byte analogPin, boolean report)  // sets pin mode and flag for unsolicited messages 
                                                                    // the autoInterval must be non-zero for message to be sent
-                                                                   // see ANALOG_DATA_REQUEST for the message to set the interval  
+                                                                   // using the AUTOEVENT_REQUEST message for the IO service
 { 
-  if (analogPin < MAX_ANALOG_INPUTS) {
+ if (analogPin < MAX_ANALOG_INPUTS) {
     if(report == true) {      
       analogInputsToReport |= (1U << analogPin); 
     } else {
@@ -267,10 +311,10 @@ void asipIOClass::setDigitalPinAutoReport(byte pin,boolean report)
  Pin requests are by their digital number, by default, requests will only succeed if
  the pin exists,supports the requested mode and is not reserved or allocated to a service.  
  */
-asipErr_t asipIOClass::PinMode(Stream * stream, byte pin, int mode)
+asipErr_t asipIOClass::PinMode(byte pin, int mode)
 {
   //printf("Request pinmode %s (%d) for pin %d\n", mode >=0 ? modeStr[mode] : modeExtStr[mode+3],mode,  pin);
-  printf("Request pinmode %s (%d) for pin %d\n", modeStr[mode],mode,  pin);
+  printf("Request pinmode %s (%d) for pin %d\n", modeStr[mode],mode,  pin); 
   asipErr_t err = ERR_INVALID_MODE;
   if (IS_PIN_ANALOG(pin)) {
     setAnalogPinAutoReport(PIN_TO_ANALOG(pin), mode == ANALOG_MODE ); // turn on/off reporting
@@ -278,7 +322,6 @@ asipErr_t asipIOClass::PinMode(Stream * stream, byte pin, int mode)
   if (IS_PIN_DIGITAL(pin)) {
     if (mode == INPUT_MODE || mode == INPUT_PULLUP_MODE) {
        setDigitalPinAutoReport(pin,true);  // turn on
-       sendDigitalPortChanges(stream,true);
     } else {
        setDigitalPinAutoReport(pin,false); // turn off
     }
@@ -338,7 +381,8 @@ asipErr_t asipIOClass::AnalogWrite(byte pin, int value)
   printf("AnalogWrite %d on pin %d\n", value, pin);
   asipErr_t err = ERR_NO_ERROR;
   if (pin < TOTAL_PINCOUNT  && IS_PIN_PWM(pin)){
-     if( asip.getPinMode(pin) == PWM_MODE) {     
+     // if stricPinMode is true then only allow if mode is PWM, else allow if mode is not reserved or other service
+     if( (!strictPinMode && asip.getPinMode(pin) < RESERVED_MODE) || asip.getPinMode(pin) == PWM_MODE) {     
         analogWrite(PIN_TO_PWM(pin), value);      
      }
      else {
@@ -369,7 +413,6 @@ asipErr_t asipIOClass::DigitalWrite(byte pin, byte value)
   return err; 
 }
 
-   
  
 
 

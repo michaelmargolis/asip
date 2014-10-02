@@ -15,7 +15,8 @@
 #include "asip.h"
 
 const byte MAX_ANALOG_INPUTS = min(NUM_ANALOG_INPUTS, sizeof(unsigned int) *8); // the size of the port mask variable
- 
+const int STRICT_PINMODE = 1; // pass this to begin to enable strict mode checking
+const int DEFAULT_ANALOG_AUTO_INTERVAL = 50; // milliseconds between reports for analog input values
 //Core IO service
 
 const char id_IO_SERVICE    = 'I';   // tag indicating message is for the low level I/O layer
@@ -45,7 +46,8 @@ class asipIOClass : public asipServiceClass
 {  
 public:
    asipIOClass(const char svcId, const char evtId);
-   void begin(void); // this class does not use the base class begin arguments
+   void begin(void); // this class does not require the base class begin arguments
+   void begin( int useStrictPinmode); // pass STRICT_PINMODE for strict checking
    virtual void reset();
    void reportValues(Stream *stream);
    void reportValue(int sequenceId, Stream * stream) ; // send the value of the given device   
@@ -54,9 +56,10 @@ private:
    void begin(byte nbrElements, byte pinCount, const pinArray_t pins[]);
    void setAnalogPinAutoReport(byte pin,boolean report);  // sets pin mode and flag for unsolicited messages
    void setDigitalPinAutoReport(byte pin,boolean report); // sets pin mode and flag for unsolicited messages
-   asipErr_t PinMode(Stream *stream, byte pin, int mode);
+   asipErr_t PinMode(byte pin, int mode);
    asipErr_t AnalogWrite(byte pin, int value);  
-   asipErr_t DigitalWrite(byte pin, byte value); 
+   asipErr_t DigitalWrite(byte pin, byte value);
+   bool strictPinMode;  
 
     /* analog inputs */
     unsigned int analogInputsToReport; // bitwise array to store pin reporting

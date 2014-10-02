@@ -23,7 +23,6 @@ asipClass:: asipClass(){
   
 }
  
- 
 void asipClass::begin(Stream *s, int svcCount, asipServiceClass **serviceArray, char *sketchName )
 {
   serial = s;
@@ -33,7 +32,7 @@ void asipClass::begin(Stream *s, int svcCount, asipServiceClass **serviceArray, 
   for(byte p=0; p < TOTAL_PINCOUNT; p++) {
      setPinMode(p, UNALLOCATED_PIN_MODE);
   }
-   programName = sketchName;
+  programName = sketchName;
   s->write(DEBUG_MSG_HEADER);
   s->print(sketchName);  
   // list all implemented service tags
@@ -45,8 +44,7 @@ void asipClass::begin(Stream *s, int svcCount, asipServiceClass **serviceArray, 
     s->write(services[i]->ServiceId);
     s->write(' ');
   }
-  s->write(MSG_TERMINATOR);  
- 
+  s->write(MSG_TERMINATOR); 
 }
  
 void asipClass::service()
@@ -333,10 +331,10 @@ byte port,mask;
     if(IS_PIN_DIGITAL(p)) {
        port = DIGITAL_PIN_TO_PORT(p);
        mask = DIGITAL_PIN_TO_MASK(p);
-    }	
-	else {
-	   port = mask = 0;
-	}
+    }   
+    else {
+       port = mask = 0;
+    }
      serial->print(port,HEX);
      serial->write(':');
      serial->print(mask, HEX); // note the mask is sent as Hex
@@ -456,9 +454,14 @@ void asipServiceClass::reportValues(Stream *stream)
   
 }
 
-void asipServiceClass::setAutoreport(Stream *stream) // reads stream for number of ticks between events, 0 disables 
+void asipServiceClass::setAutoreport(Stream *stream) // reads stream and sets number of ticks between events 
 {
   unsigned int ticks = stream->parseInt();
+  setAutoreport(ticks);
+}
+
+void asipServiceClass::setAutoreport(unsigned int ticks) // sets number ticks between events, 0 disables 
+{
   autoInterval = ticks;
   unsigned int currentTick = millis(); // truncate to a 16 bit value
   nextTrigger = currentTick + autoInterval; // set the next trigger tick count
