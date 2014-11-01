@@ -46,7 +46,7 @@ asipServoClass asipServos(id_SERVO_SERVICE, NO_EVENT);
 asipDistanceClass asipDistance(id_DISTANCE_SERVICE);
 
 // make a list of the created services
-asipServiceClass *services[] = { 
+asipService services[] = { 
                                  &asipIO, // the core class for pin level I/O
                                  &motors,
                                  &encoders,
@@ -55,13 +55,11 @@ asipServiceClass *services[] = {
                                  &asipServos,                                 
                                  &asipDistance };
 
-int nbrServices = sizeof(services) / sizeof(asipServiceClass*);
-
 void setup() {
-  Serial.begin(57600);
+  Serial.begin(ASIP_BAUD);
  // Serial.begin(250000);
   
-  asip.begin(&Serial, nbrServices, (asipServiceClass **)&services, sketchName); 
+  asip.begin(&Serial, asipServiceCount(services), services, sketchName); 
   asipIO.begin(); 
   asip.reserve(SERIAL_RX_PIN);  // reserve pins used by the serial port 
   asip.reserve(SERIAL_TX_PIN);  // these defines are in asip/boards.h
@@ -75,7 +73,7 @@ void setup() {
   asip.sendPinModes(); // for debug
   asip.sendPortMap(); 
 
-  for(int i=0; i< nbrServices; i++)
+  for(int i=0; i < asipServiceCount(services); i++)
   {
     services[i]->reportName(&Serial); 
     Serial.print(" is service ");

@@ -33,7 +33,7 @@ void asipClass::begin(Stream *s, int svcCount, asipServiceClass **serviceArray, 
      setPinMode(p, UNALLOCATED_PIN_MODE);
   }
   programName = sketchName;
-  s->write(DEBUG_MSG_HEADER);
+  s->write(INFO_MSG_HEADER);
   s->print(sketchName);  
   // list all implemented service tags
   s->print(F(" running on "));
@@ -335,7 +335,7 @@ byte port,mask;
     else {
        port = mask = 0;
     }
-     serial->print(port,HEX);
+     serial->print(port); // port number sent as decimal
      serial->write(':');
      serial->print(mask, HEX); // note the mask is sent as Hex
      if( p != TOTAL_PINCOUNT-1)

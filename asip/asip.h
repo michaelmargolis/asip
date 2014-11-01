@@ -23,7 +23,7 @@
  *  whether it will be compatible with the installed firmware. 
  */ 
 const int ASIP_MAJOR_VERSION  = 0; // for non-compatible changes
-const int ASIP_MINOR_VERSION  = 2; // for backwards compatibility
+const int ASIP_MINOR_VERSION  = 3; // for backwards compatibility
 
 const long ASIP_BAUD  = 57600;      
 
@@ -67,7 +67,8 @@ const char tag_RESTART_REQUEST    = 'R';  // disables all autoevents and attempt
 // messages from Arduino
 const char EVENT_HEADER        = '@';  // event messages are preceded with this tag 
 const char ERROR_MSG_HEADER    = '~';  // error messages begin with this tag
-const char DEBUG_MSG_HEADER    = '!';  // debug messages begin with this tag
+const char INFO_MSG_HEADER     = '!';  // info messages begin with this tag
+const char DEBUG_MSG_INDICATOR = '!';  // debug text within info messages are preceded with this tag
 
 // tags available to all services (Don’t use these for some other service specific function)
 const char tag_AUTOEVENT_REQUEST = 'A';  // this tag sets autoevent status
