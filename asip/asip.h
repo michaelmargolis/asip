@@ -23,7 +23,7 @@
  *  whether it will be compatible with the installed firmware. 
  */ 
 const int ASIP_MAJOR_VERSION  = 0; // for non-compatible changes
-const int ASIP_MINOR_VERSION  = 2; // for backwards compatibility
+const int ASIP_MINOR_VERSION  = 3; // for backwards compatibility
 
 const long ASIP_BAUD  = 57600;      
 
