@@ -67,7 +67,8 @@ const char tag_RESTART_REQUEST    = 'R';  // disables all autoevents and attempt
 // messages from Arduino
 const char EVENT_HEADER        = '@';  // event messages are preceded with this tag 
 const char ERROR_MSG_HEADER    = '~';  // error messages begin with this tag
-const char DEBUG_MSG_HEADER    = '!';  // debug messages begin with this tag
+const char INFO_MSG_HEADER     = '!';  // info messages begin with this tag
+const char DEBUG_MSG_INDICATOR = '!';  // debug text within info messages are preceded with this tag
 
 // tags available to all services (Don’t use these for some other service specific function)
 const char tag_AUTOEVENT_REQUEST = 'A';  // this tag sets autoevent status
@@ -88,7 +89,7 @@ const char MSG_TERMINATOR = '\n';
 #ifdef PRINTF_DEBUG
 extern char _buf[64];
 #define printf(...)                         \
-    Serial.write(DEBUG_MSG_HEADER);   \
+    Serial.write(INFO_MSG_HEADER);   Serial.write(DEBUG_MSG_INDICATOR);  \
     do {                            \
         sprintf(_buf, __VA_ARGS__); Serial.write(_buf); \
     } while (0) 
