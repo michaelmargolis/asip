@@ -82,10 +82,10 @@ void asipClass::service()
   for(int i=0; i < nbrServices; i++) {
     if( services[i]->autoInterval > 0) {  // zero disables autoInterval
        //VERBOSE_DEBUG(  printf("Auto report, tick= %u, trig = %u, interval=%u\n",currentTick,(currentTick - services[i]->nextTrigger),services[i]->autoInterval);)
-       if(services[i]->nextTrigger - currentTick >= services[i]->autoInterval) {
+       if( currentTick >= services[i]->nextTrigger )  {
          services[i]->reportValues(serial);
          services[i]->nextTrigger =  currentTick + services[i]->autoInterval; // reset the count
-        //VERBOSE_DEBUG( printf("Counter reset to %u\n", services[i]->nextTrigger);) 
+        //VERBOSE_DEBUG( printf("Counter reset to %u\n", services[i]->nextTrigger);)
        }      
     }    
   }

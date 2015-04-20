@@ -15,7 +15,7 @@
 #include "Arduino.h"
 
 //#define PRINTF_DEBUG
-#define VERBOSE_DEBUG(X) //X  // uncomment x to enable verbose debug
+#define VERBOSE_DEBUG(X) // X  // uncomment x to enable verbose debug
 
 
 /* Version numbers for the protocol.  
@@ -127,7 +127,7 @@ protected:
    friend class asipClass; 
    const char ServiceId;       // the unique Upper Case ASCII character that identifies this service 
    unsigned int autoInterval;  // the number of ticks between each autoevent, 0 disables autoevents
-   unsigned int nextTrigger;   // tick value for the next event (note this rolls over after 65 seconds so intervals should be limited to under one minute  
+   unsigned int nextTrigger;   // tick value for the next event (note this rolls over after 65 seconds so intervals should be limited to under one minute
 };
 
 typedef asipServiceClass* asipService;
