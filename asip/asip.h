@@ -62,6 +62,8 @@ const char SYSTEM_SERVICE_ID     = '@'; // only used when de-registering pins at
 // Request messages to Arduino
 const char SYSTEM_MSG_HEADER      = '#';  // system requests are preceded with this tag
 const char tag_SYSTEM_GET_INFO    = '?';  // Get version and hardware info
+const char tag_SERVICES_NAMES      = 'N';  // get list of friendly service names 
+const char tag_PIN_SERVICES_LIST   = 'S';  // gets a list of pins indicating registered service 
 const char tag_RESTART_REQUEST    = 'R';  // disables all autoevents and attempts to restart all services 
 
 // messages from Arduino

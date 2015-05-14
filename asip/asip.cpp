@@ -51,7 +51,7 @@ void asipClass::service()
 { 
   if(serial->available() >= MIN_MSG_LEN) {  
      int tag = serial->read();
-     if( tag != MSG_TERMINATOR) { // for now, ignore the newline at the end of the message   
+     if( tag > ' ') { // ignore control characters   
         if(tag == SYSTEM_MSG_HEADER) {
           if(serial->read() == ',') {// tag must be followed by a separator 
               processSystemMsg();
@@ -111,12 +111,58 @@ void asipClass::processSystemMsg()
       serial->print(programName);
       serial->write(MSG_TERMINATOR);
    }
+   else if(request == tag_SERVICES_NAMES) {
+      // sends a list of service IDs and their friendly names
+      serial->write(EVENT_HEADER);
+      serial->write(SYSTEM_MSG_HEADER);
+      serial->write(',');
+      serial->write(tag_SERVICES_NAMES);
+      serial->write(',');
+      serial->print(nbrServices);
+      serial->write(',');   
+      serial->write('{');     
+      for(byte i=0; i < nbrServices; i++) {
+         char svcId = services[i]->ServiceId;
+         if(isValidServiceId(svcId))  {
+            serial->write( svcId ); 
+            serial->write( ':' );
+            services[i]->reportName(serial);                       
+            if( i < nbrServices-1)
+               serial->write(',');
+         }  
+       }
+       serial->write('}');
+       serial->write(MSG_TERMINATOR);
+   }
+   else if(request == tag_PIN_SERVICES_LIST) {
+ // sends a list of all pins with associated service id if any
+      serial->write(EVENT_HEADER);
+      serial->write(SYSTEM_MSG_HEADER);
+      serial->write(',');
+      serial->write(tag_PIN_SERVICES_LIST);
+      serial->write(',');
+      serial->print(TOTAL_PINCOUNT);
+      serial->write(','); 
+      serial->write('{');
+      for(byte p=0; p < TOTAL_PINCOUNT; p++) {    
+         int svc = (char)getServiceId(p);
+         serial->write( svc );          
+         if( p != TOTAL_PINCOUNT-1)
+            serial->write(',');
+          else  
+            serial->write('}');
+      }
+      serial->write(MSG_TERMINATOR);
+   }   
    else if(request == tag_RESTART_REQUEST) {
        printf("Resetting services\n");
        for(int i=0; i < nbrServices; i++) {
            services[i]->reset();
            services[i]->autoInterval = 0;   // this disables autoInterval          
        }
+   }
+   else if(request == INFO_MSG_HEADER) {
+       // TODO - send to debug stream ? 
    }
    else {
      sendErrorMessage(SYSTEM_MSG_HEADER, request, ERR_UNKNOWN_REQUEST, serial);
@@ -259,36 +305,11 @@ void asipClass::sendPinModes()  // sends a list of all pin modes
      if( p != TOTAL_PINCOUNT-1)
         serial->write(',');
       else  
-        serial->println("}");
+        serial->write('}');
   }
+  serial->write(MSG_TERMINATOR); 
 } 
 
-void asipClass::sendPinServicesList() // sends a list of all pins with associated service id if any
-{
-  serial->write(EVENT_HEADER);
-  serial->write(id_IO_SERVICE);
-  serial->write(',');
-  serial->write(tag_PIN_SERVICES_LIST);
-  serial->write(',');
-  serial->print(TOTAL_PINCOUNT);
-  serial->write(',');  // comma added 21 June 2014
-  serial->write('{');
-  for(byte p=0; p < TOTAL_PINCOUNT; p++) {
-     //int mode = (char)pinModes[p]; 
-     int svc = (char)getServiceId(p);
-     serial->write( svc ); 
-     serial->write( ':' );  
-     asipServiceClass* svcPtr = serviceFromId(svc);
-     if( svcPtr != NULL)
-         svcPtr->reportName(serial);     
-     else   
-         serial->print('?');     
-     if( p != TOTAL_PINCOUNT-1)
-        serial->write(',');
-      else  
-        serial->println("}");
-  }
-}
 void asipClass::sendPinCapabilites()  // sends a bitfield array indicating capabilities all pins 
 {
   capabilityMask mask;
@@ -310,8 +331,9 @@ void asipClass::sendPinCapabilites()  // sends a bitfield array indicating capab
      if( p != TOTAL_PINCOUNT-1)
         serial->write(',');
       else  
-        serial->println("}");
+        serial->write('}');
   }
+  serial->write(MSG_TERMINATOR); 
 } 
 
 void asipClass::sendPortMap()
@@ -341,8 +363,9 @@ byte port,mask;
      if( p != TOTAL_PINCOUNT-1)
         serial->write(',');
       else  
-        serial->println("}");
+        serial->write('}');
   } 
+  serial->write(MSG_TERMINATOR); 
 }
 
 void asipClass::sendAnalogPinMap()
@@ -365,9 +388,10 @@ void asipClass::sendAnalogPinMap()
      if( --pinsToReport > 0)
         serial->write(',');
       else  
-        serial->println("}");
+        serial->write('}');
     }
   } 
+  serial->write(MSG_TERMINATOR); 
   if( pinsToReport != 0) {
      printf("number of analog pins is off by %d\n", pinsToReport);
   }
@@ -379,11 +403,12 @@ void asipClass::sendErrorMessage( const char svc, const char tag, asipErr_t errn
   stream->write(svc);
   stream->write(',');
   stream->write(tag);  
-  stream->write(':');  
+  stream->write(',');  
   stream->print(errno);
-  stream->print('(');  
+  stream->print('{');  
   stream->print(errStr[errno]); 
-  stream->println(')');   
+  stream->write('}');
+  serial->write(MSG_TERMINATOR);   
 } 
 
 asipClass asip;
