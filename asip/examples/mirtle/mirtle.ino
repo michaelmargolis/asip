@@ -60,9 +60,9 @@ void setup() {
  // Serial.begin(250000);
   
   asip.begin(&Serial, asipServiceCount(services), services, sketchName); 
-  asipIO.begin(); 
   asip.reserve(SERIAL_RX_PIN);  // reserve pins used by the serial port 
   asip.reserve(SERIAL_TX_PIN);  // these defines are in asip/boards.h
+  asipIO.begin(); 
   // start the services
   motors.begin(2,6,motorPins); // two motors that use a total of 6 pins  
   encoders.begin(2,4,encoderPins); // two encoders that use a total of 4 pins 

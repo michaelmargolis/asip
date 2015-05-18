@@ -60,10 +60,9 @@ void setup() {
  // Serial.begin(250000);
   
   asip.begin(&Serial,  asipServiceCount(services), services, sketchName); 
-  asipIO.begin(); // start the IO service
   asip.reserve(SERIAL_RX_PIN);  // reserve pins used by the serial port 
   asip.reserve(SERIAL_TX_PIN);  // these defines are in asip/boards.h 
-
+  asipIO.begin(); // start the IO service
   gyro3Axis.begin(NBR_GYRO_AXIS,startI2C); // I2C services use begin method with nbr of elements (axis) & start callback
   accelerometer3Axis.begin(NBR_ACCEL_AXIS,startI2C); // gyro and accel have x,y,z axis 
   heading3Axis.begin(NBR_MAG_AXIS,startI2C); // 3 raw values, 4th element is the calculated compass heading 

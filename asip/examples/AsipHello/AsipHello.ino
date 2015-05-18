@@ -10,9 +10,9 @@ asipService services[] = {&asipIO}; // the core class for pin level I/O
 void setup() {
   Serial.begin(57600);  
   asip.begin(&Serial, asipServiceCount(services), services, "AsipHello"); 
-  asipIO.begin(); // start the IO service
   asip.reserve(SERIAL_RX_PIN);  // reserve pins used by the serial port 
   asip.reserve(SERIAL_TX_PIN);  // these defines are in asip/boards.h 
+  asipIO.begin(); // start the IO service
   Serial.println("!AsipHello is ready");
 }
 
