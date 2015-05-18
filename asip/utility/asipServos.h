@@ -10,7 +10,7 @@
 
 
 #ifndef asipServo_h
-#define asipServo_h_h
+#define asipServo_h
 
 #include "asip.h"
 #include <Servo.h> 

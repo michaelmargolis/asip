@@ -14,18 +14,13 @@
    This default behaviour can be suppressed by calling the begin method with 
    the argument: STRICT_PINMODE 
  */
- 
 
 #include "asipIO.h"
 
-//#define ASIP_SERVICE_NAME  ((asipSvcName) "ASIP core IO")
-//THIS_SVC_NAME("ASIP core IO");
-
-
-#ifdef PRINTF_DEBUG
+#ifdef ASIP_DEBUG
 // mode strings for debug
 char * modeStr[] = {"UNALLOCATED", "INPUT", "INPUT_PULLUP", "OUTPUT", "ANALOG", "PWM","INVALID","OTHER SERVICE", "RESERVED"}; 
-#endif
+#endif 
 
 void AssignPort(byte pin); // store register associated with given pin in register table 
 byte getPortIndex(byte pin); // return index into portRegisterTable associated with given pin
@@ -61,12 +56,13 @@ void AssignPort(byte pin)
      if( index < portCount) {
           index++;
      }
-     else 
+     else {       
         break;                
+     }
   }
   portRegisterTable[portCount] = port;
   portCount++;
-  //VERBOSE_DEBUG (printf("Assign: added index %d for port %d for pin %d\n", index,port, pin));
+  VERBOSE_DEBUG (printf("Assign: added index %d for port %d for pin %d\n", index,port, pin));
 }    
 
 // return the index into the portRegisterTable associated with the given pin
@@ -77,8 +73,7 @@ byte getPortIndex(byte pin)
        if(portRegisterTable[index] == port) {
            VERBOSE_DEBUG (printf("GetPortIndex: Port index for pin %d is %d\n", pin, index));
            return index;
-       }
-       printf("GetPortIndex: looking for %d, index= %d, port = %d\n", port, index, portRegisterTable[index]);     
+       }          
    }
    printf("GetPortIndex: Unable to get index for pin %d on port %d\n", pin, port);
    return PORT_ERROR;
@@ -149,13 +144,21 @@ asipIOClass asipIO(id_IO_SERVICE,tag_ANALOG_VALUE );
 
 void asipIOClass::begin( )
 {
+  VERBOSE_DEBUG(debugStream->print(F("IO Begin:\n")));
+  memset(portRegisterTable, 0xff,MAX_IO_PORTS); // init table to impossible port values prior to assignment 
+  for( byte p = 0; p < NUM_DIGITAL_PINS; p++) {
+    AssignPort(p);
+  }
+  
   if(strictPinMode) {
+    VERBOSE_DEBUG(debugStream->print(F("Strict PinMode\n")));
     analogInputsToReport = 0;
     // pins will be set to UNALLOCATED_PIN_MODE
   }
   else {
+    VERBOSE_DEBUG(debugStream->print(F("Default PinMode\n")));
    // set all pins capable of analog input to ANALOG_MODE 
-    for( byte pin = 0; pin < TOTAL_PINCOUNT; pin++) {
+    for( byte pin = 0; pin < TOTAL_PINCOUNT; pin++) {     
       if (IS_PIN_ANALOG(pin)) {
         if (IS_PIN_DIGITAL(pin)) {
           pinMode(PIN_TO_DIGITAL(pin), INPUT_MODE);    // disable output driver
@@ -167,11 +170,8 @@ void asipIOClass::begin( )
         PinMode(pin, INPUT_MODE);    
       }
     }
+    VERBOSE_DEBUG(debugStream->print(F("setting default auto interval\n\n")));
     setAutoreport(DEFAULT_ANALOG_AUTO_INTERVAL);
-  }
-  memset(portRegisterTable, 0xff,MAX_IO_PORTS); // init table to impossible port values prior to assignment 
-  for( byte p = 0; p < NUM_DIGITAL_PINS; p++) {
-    AssignPort(p);
   }
 }
 
@@ -254,7 +254,7 @@ void asipIOClass::processRequestMsg(Stream *stream)
       case tag_GET_PORT_TO_PIN_MAPPING: asip.sendPortMap();                break;
       case tag_GET_PIN_MODES:           asip.sendPinModes();               break;
       case tag_GET_PIN_CAPABILITIES:    asip.sendPinCapabilites();         break; 
-      case tag_GET_ANALOG_PIN_MAPPING:  asip.sendAnalogPinMap();           break;
+      case tag_GET_ANALOG_PIN_MAPPING:  asip.sendAnalogPinMap();           break;    
       case tag_DIGITAL_WRITE:           err = DigitalWrite(pin,value);     break; 
       case tag_ANALOG_WRITE:            err = AnalogWrite(pin,value);      break;
      case tag_PIN_MODE: 
@@ -294,7 +294,7 @@ void asipIOClass::setDigitalPinAutoReport(byte pin,boolean report)
 // todo - add error checking here
    byte portIndex = getPortIndex(pin);
    if( portIndex == PORT_ERROR) {
-      VERBOSE_DEBUG(printf( "Unable to get port index for pin %d\n", pin));
+      printf( "Unable to get port index for pin %d\n", pin);
       return;
    }
    byte mask = DIGITAL_PIN_TO_MASK(pin);  
@@ -311,9 +311,14 @@ void asipIOClass::setDigitalPinAutoReport(byte pin,boolean report)
  the pin exists,supports the requested mode and is not reserved or allocated to a service.  
  */
 asipErr_t asipIOClass::PinMode(byte pin, int mode)
-{
-  //printf("Request pinmode %s (%d) for pin %d\n", mode >=0 ? modeStr[mode] : modeExtStr[mode+3],mode,  pin);
-  printf("Request pinmode %s (%d) for pin %d\n", modeStr[mode],mode,  pin); 
+{ 
+#ifdef ASIP_DEBUG
+  VERBOSE_DEBUG(printf("Request pinmode %s (%d) for pin %d\n", modeStr[mode],mode,  pin)); 
+#endif  
+  if( asip.getPinMode(pin) == RESERVED_MODE){
+     VERBOSE_DEBUG(printf("Pin is reserved, mode not set\n"));
+     return ERR_MODE_UNAVAILABLE;
+  }  
   asipErr_t err = ERR_INVALID_MODE;
   if (IS_PIN_ANALOG(pin)) {
     setAnalogPinAutoReport(PIN_TO_ANALOG(pin), mode == ANALOG_MODE ); // turn on/off reporting
@@ -370,6 +375,11 @@ asipErr_t asipIOClass::PinMode(byte pin, int mode)
       digitalWrite(PIN_TO_DIGITAL(pin), LOW); // disable internal pull-ups
       err = asip.registerPinMode(pin,UNALLOCATED_PIN_MODE, ServiceId);
     }
+    break;
+    case RESERVED_MODE:
+       if (IS_PIN_DIGITAL(pin)) {
+           setDigitalPinAutoReport(pin, false);
+       }     
     break;
   }
   return err;
