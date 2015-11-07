@@ -56,8 +56,10 @@
 #define IS_PIN_ANALOG(p)        ((p) >= 18 && (p) < TOTAL_PINCOUNT)
 #define PIN_TO_ANALOG(P)        (P-18)
 #define ANALOG_PIN_TO_DIGITAL   (P+18)
-#define SERIAL_RX_PIN            0
-#define SERIAL_TX_PIN            1
+#define SERIAL_RX_PIN            -1  //negative pin numbers if comms is over USB
+#define SERIAL_TX_PIN            -1
+#define SERIAL1_RX_PIN            0
+#define SERIAL1_TX_PIN            1
 #define DIGITAL_PIN_TO_PORT(p)   digitalPinToPort(p)
 #define DIGITAL_PIN_TO_MASK(p)   digitalPinToBitMask(p)
 #define ARDUINO_PINOUT_OPTIMIZE
@@ -85,7 +87,7 @@
 #define IS_PIN_DIGITAL(p)       ((p) >= 0 && (p) < TOTAL_PINS)
 #define IS_PIN_ANALOG(p)        ((p) >= 11 && (p) <= 22)
 #define IS_PIN_PWM(p)           digitalPinHasPWM(p)
-#define IS_PIN_SERVO(p)         ((p) >= 0 && (p) < MAX_SERVOS)
+#define IS_PIN_SERVO(p)         IS_PIN_DIGITAL(p)
 #define IS_PIN_I2C(p)           ((p) == 5 || (p) == 6)
 #define IS_PIN_SPI(p)           ((p) == SS || (p) == MOSI || (p) == MISO || (p) == SCK)
 #define PIN_TO_DIGITAL(p)       (p)
@@ -98,10 +100,35 @@
 #elif defined(__MK20DX128__) || defined(__MK20DX256__)
 #define TOTAL_PINCOUNT          38 // 24 digital + 10 analog-digital + 4 analog
 #define TOTAL_ANALOG_PINS       14
-#define IS_PIN_DIGITAL(p)       ((p) >= 0 && (p) <= 34)
-#define IS_PIN_ANALOG(p)        (((p) >= 14 && (p) <= 23) || ((p) >= 34 && (p) <= 38))
+#define IS_PIN_DIGITAL(p)       ((p) >= 0 && (p) <= 33)
+// note pins 35-38 are analog only pins
+#define IS_PIN_ANALOG(p)        (((p) >= 14 && (p) <= 23) || ((p) >= 26 && (p) <= 28) || ((p) >= 35 && (p) <= 38))
 #define IS_PIN_PWM(p)           digitalPinHasPWM(p)
-#define IS_PIN_SERVO(p)         ((p) >= 0 && (p) < MAX_SERVOS)
+#define IS_PIN_SERVO(p)         IS_PIN_DIGITAL(p)
+#define IS_PIN_I2C(p)           ((p) == 18 || (p) == 19)
+#define PIN_TO_DIGITAL(p)       (p)
+#define PIN_TO_ANALOG(p)        (((p)<=23)?(p)-14:(p)-24)
+#define PIN_TO_PWM(p)           PIN_TO_DIGITAL(p)
+#define PIN_TO_SERVO(p)         (p) 
+#define SERIAL_RX_PIN            -1  //negative pin numbers if comms is over USB
+#define SERIAL_TX_PIN            -1 
+#define SERIAL1_RX_PIN           0
+#define SERIAL1_TX_PIN           1
+#define SERIAL2_RX_PIN           9
+#define SERIAL2_TX_PIN           10
+#define SERIAL3_RX_PIN           7
+#define SERIAL3_TX_PIN           8
+#define DIGITAL_PIN_TO_PORT(p)   (p/8) 
+#define DIGITAL_PIN_TO_MASK(p)   (1<<(p%8))     
+
+// Teensy LC
+#elif defined(__MKL26Z64__)
+#define TOTAL_PINCOUNT          27 
+#define TOTAL_ANALOG_PINS       13
+#define IS_PIN_DIGITAL(p)       ((p) >= 0 && (p) <= 26)
+#define IS_PIN_ANALOG(p)        ((p) >= 14 && (p) <= 23) 
+#define IS_PIN_PWM(p)           digitalPinHasPWM(p)
+#define IS_PIN_SERVO(p)         IS_PIN_DIGITAL(p)
 #define IS_PIN_I2C(p)           ((p) == 18 || (p) == 19)
 #define PIN_TO_DIGITAL(p)       (p)
 #define PIN_TO_ANALOG(p)        (((p)<=23)?(p)-14:(p)-24)
@@ -115,6 +142,7 @@
 #define DIGITAL_PIN_TO_MASK(p)   (1<<(p%8))     
 
 
+
 // Teensy++ 1.0 and 2.0
 #elif defined(__AVR_AT90USB646__) || defined(__AVR_AT90USB1286__)
 #define TOTAL_PINCOUNT          46 // 38 digital + 8 analog
@@ -122,7 +150,7 @@
 #define IS_PIN_DIGITAL(p)       ((p) >= 0 && (p) < TOTAL_PINS)
 #define IS_PIN_ANALOG(p)        ((p) >= 38 && (p) < TOTAL_PINS)
 #define IS_PIN_PWM(p)           digitalPinHasPWM(p)
-#define IS_PIN_SERVO(p)         ((p) >= 0 && (p) < MAX_SERVOS)
+#define IS_PIN_SERVO(p)         IS_PIN_DIGITAL(p)
 #define IS_PIN_I2C(p)           ((p) == 0 || (p) == 1)
 #define IS_PIN_SPI(p)           ((p) == SS || (p) == MOSI || (p) == MISO || (p) == SCK)
 #define PIN_TO_DIGITAL(p)       (p)
@@ -136,7 +164,7 @@
 #define IS_PIN_DIGITAL(p)       ((p) >= 0 && (p) < TOTAL_PINS)
 #define IS_PIN_ANALOG(p)        ((p) >= 54 && (p) < TOTAL_PINS)
 #define IS_PIN_PWM(p)           digitalPinHasPWM(p)
-#define IS_PIN_SERVO(p)         ((p) >= 0 && (p) < MAX_SERVOS)
+#define IS_PIN_SERVO(p)         IS_PIN_DIGITAL(p)
 #define IS_PIN_I2C(p)           ((p) == 20 || (p) == 21)
 //#define IS_PIN_SPI(p)           ((p) == SS || (p) == MOSI || (p) == MISO || (p) == SCK)
 #define PIN_TO_DIGITAL(p)       (p)
@@ -150,14 +178,24 @@
 #error "Analog pin macros not defined in board.h for this chip"
 #endif
 
+#if not defined (IS_PIN_DIGITAL)
 #define IS_PIN_DIGITAL(P) (P < TOTAL_PINCOUNT)      // assumes all pins can be used as digital pins
+#endif
+#if not defined (PIN_TO_DIGITAL)
 #define PIN_TO_DIGITAL(P) (P) 
+#endif
 
 #if not defined (digitalPinHasPWM)
-#define digitalPinHasPWM digitalPinToTimer
+//#define digitalPinHasPWM digitalPinToTimer
 #endif
+
+#if not defined (IS_PIN_PWM)
 #define IS_PIN_PWM(P)  (digitalPinHasPWM(P))
+#endif
+
+#if not defined (PIN_TO_PWM)
 #define PIN_TO_PWM(P)  (P)
+#endif
 
 // board name macros
 #if defined(__AVR_ATmega168__)    
@@ -177,7 +215,7 @@
 #elif defined(__MK20DX128__)
 #define CHIP_NAME "MK20DX128"
 #elif defined(__MK20DX256__)
-#define CHIP_NAME "MK20DX256"
+#define CHIP_NAME "Teensy3.1"
 #elif defined (_VARIANT_ARDUINO_DUE_X_)
 #define CHIP_NAME "Arduino DUE"
 #elif defined (__arm__) && defined (__SAM3X8E__)

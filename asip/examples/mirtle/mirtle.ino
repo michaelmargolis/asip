@@ -7,7 +7,7 @@
 #include <utility/asipServos.h> // derived definitions for servo
 #include <Servo.h> // needed for the servo service 
 
-char * sketchName = "Mirtle";
+char const *sketchName = "Mirtle";
 // the order of the following pins is service specific, see the service definition for details
 
 #if defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__)

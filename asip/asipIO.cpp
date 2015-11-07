@@ -50,7 +50,7 @@ void AssignPort(byte pin)
   byte index = 0;
   while(true) {
      if( portRegisterTable[index] == port) {
-        //VERBOSE_DEBUG (printf("Assign: pin %d has port index %d (port = %d)\n", pin, index,port));
+        //verbose_printf("Assign: pin %d has port index %d (port = %d)\n", pin, index,port));
         return; // already assigned
      }
      if( index < portCount) {
@@ -62,7 +62,7 @@ void AssignPort(byte pin)
   }
   portRegisterTable[portCount] = port;
   portCount++;
-  VERBOSE_DEBUG (printf("Assign: added index %d for port %d for pin %d\n", index,port, pin));
+  verbose_printf("Assign: added index %d for port %d for pin %d\n", index,port, pin);
 }    
 
 // return the index into the portRegisterTable associated with the given pin
@@ -71,11 +71,11 @@ byte getPortIndex(byte pin)
   byte port = DIGITAL_PIN_TO_PORT(pin);  
    for( byte index = 0; index < portCount;index++ ) {
        if(portRegisterTable[index] == port) {
-           VERBOSE_DEBUG (printf("GetPortIndex: Port index for pin %d is %d\n", pin, index));
+           verbose_printf("GetPortIndex: Port index for pin %d is %d\n", pin, index);
            return index;
        }          
    }
-   printf("GetPortIndex: Unable to get index for pin %d on port %d\n", pin, port);
+  debug_printf("GetPortIndex: Unable to get index for pin %d on port %d\n", pin, port);
    return PORT_ERROR;
 }
 
@@ -144,19 +144,19 @@ asipIOClass asipIO(id_IO_SERVICE,tag_ANALOG_VALUE );
 
 void asipIOClass::begin( )
 {
-  VERBOSE_DEBUG(debugStream->print(F("IO Begin:\n")));
+  verbose_printf(F("IO Begin:\n"));
   memset(portRegisterTable, 0xff,MAX_IO_PORTS); // init table to impossible port values prior to assignment 
   for( byte p = 0; p < NUM_DIGITAL_PINS; p++) {
     AssignPort(p);
   }
   
   if(strictPinMode) {
-    VERBOSE_DEBUG(debugStream->print(F("Strict PinMode\n")));
+    verbose_printf(F("Strict PinMode\n"));
     analogInputsToReport = 0;
     // pins will be set to UNALLOCATED_PIN_MODE
   }
   else {
-    VERBOSE_DEBUG(debugStream->print(F("Default PinMode\n")));
+    verbose_printf(F("Default PinMode\n"));
    // set all pins capable of analog input to ANALOG_MODE 
     for( byte pin = 0; pin < TOTAL_PINCOUNT; pin++) {     
       if (IS_PIN_ANALOG(pin)) {
@@ -170,8 +170,8 @@ void asipIOClass::begin( )
         PinMode(pin, INPUT_MODE);    
       }
     }
-    VERBOSE_DEBUG(debugStream->print(F("setting default auto interval\n\n")));
-    setAutoreport(DEFAULT_ANALOG_AUTO_INTERVAL);
+    verbose_printf(F("setting default auto interval\n\n"));   
+    setAutoreport(DEFAULT_ANALOG_AUTO_INTERVAL);   
   }
 }
 
@@ -196,7 +196,7 @@ void asipIOClass::reset()
         pinMode(p, INPUT); // this is the default Arduino pin state at start-up
        }
        else{
-        printf("Error de-registering pin %d\n", p);
+       debug_printf("Error de-registering pin %d\n", p);
       }
      }
    }
@@ -241,12 +241,12 @@ void asipIOClass::reportValue(int sequenceId, Stream * stream)  // send the valu
 void asipIOClass::processRequestMsg(Stream *stream)
 {
    char request = stream->read();
-   byte pin;
-   int value;  
+   byte pin = -1; 
+   int value = UNALLOCATED_PIN_MODE;  //set default value
    if( request == tag_PIN_MODE || request == tag_DIGITAL_WRITE || request == tag_ANALOG_WRITE) {
      pin = stream->parseInt();
      value = stream->parseInt();
-     //VERBOSE_DEBUG( printf("Request %c for pin %d with val=%d\n", request, pin,value));
+     //verbose_printf("Request %c for pin %d with val=%d\n", request, pin,value);
    }
    asipErr_t err = ERR_NO_ERROR;   
    switch(request) {
@@ -257,7 +257,7 @@ void asipIOClass::processRequestMsg(Stream *stream)
       case tag_GET_ANALOG_PIN_MAPPING:  asip.sendAnalogPinMap();           break;    
       case tag_DIGITAL_WRITE:           err = DigitalWrite(pin,value);     break; 
       case tag_ANALOG_WRITE:            err = AnalogWrite(pin,value);      break;
-     case tag_PIN_MODE: 
+      case tag_PIN_MODE: 
             err = PinMode(pin, value);  
             if (value == INPUT_MODE || value == INPUT_PULLUP_MODE) 
                 sendDigitalPortChanges(stream,true);
@@ -294,7 +294,7 @@ void asipIOClass::setDigitalPinAutoReport(byte pin,boolean report)
 // todo - add error checking here
    byte portIndex = getPortIndex(pin);
    if( portIndex == PORT_ERROR) {
-      printf( "Unable to get port index for pin %d\n", pin);
+     debug_printf( "Unable to get port index for pin %d\n", pin);
       return;
    }
    byte mask = DIGITAL_PIN_TO_MASK(pin);  
@@ -303,7 +303,7 @@ void asipIOClass::setDigitalPinAutoReport(byte pin,boolean report)
     }
     else
       reportPinMasks[portIndex] &= (~mask);
-    VERBOSE_DEBUG( printf("reportDigPins: Port index for pin %d is %d, mask=%xX\n", pin, portIndex, reportPinMasks[portIndex]); )
+    verbose_printf("reportDigPins: Port index for pin %d is %d, mask=%xX\n", pin, portIndex, reportPinMasks[portIndex]); 
 }
 
 /*
@@ -313,10 +313,10 @@ void asipIOClass::setDigitalPinAutoReport(byte pin,boolean report)
 asipErr_t asipIOClass::PinMode(byte pin, int mode)
 { 
 #ifdef ASIP_DEBUG
-  VERBOSE_DEBUG(printf("Request pinmode %s (%d) for pin %d\n", modeStr[mode],mode,  pin)); 
+  verbose_printf("Request pinmode %s (%d) for pin %d\n", modeStr[mode],mode,  pin); 
 #endif  
   if( asip.getPinMode(pin) == RESERVED_MODE){
-     VERBOSE_DEBUG(printf("Pin is reserved, mode not set\n"));
+     verbose_printf("Pin is reserved, mode not set\n");
      return ERR_MODE_UNAVAILABLE;
   }  
   asipErr_t err = ERR_INVALID_MODE;
@@ -358,7 +358,7 @@ asipErr_t asipIOClass::PinMode(byte pin, int mode)
       digitalWrite(PIN_TO_DIGITAL(pin), LOW); // disable PWM
       pinMode(PIN_TO_DIGITAL(pin), OUTPUT_MODE);
       err = asip.registerPinMode(pin,OUTPUT_MODE, ServiceId);
-      VERBOSE_DEBUG(  printf("set pin %d to output mode\n", pin);)
+      verbose_printf("set pin %d to output mode\n", pin);
 
     }
     break;
@@ -387,7 +387,7 @@ asipErr_t asipIOClass::PinMode(byte pin, int mode)
 
 asipErr_t asipIOClass::AnalogWrite(byte pin, int value)
 {
-  printf("AnalogWrite %d on pin %d\n", value, pin);
+ debug_printf("AnalogWrite %d on pin %d\n", value, pin);
   asipErr_t err = ERR_NO_ERROR;
   if (pin < TOTAL_PINCOUNT  && IS_PIN_PWM(pin)){
      // if stricPinMode is true then only allow if mode is PWM, else allow if mode is not reserved or other service
@@ -406,7 +406,7 @@ asipErr_t asipIOClass::AnalogWrite(byte pin, int value)
 
 asipErr_t asipIOClass::DigitalWrite(byte pin, byte value)
 {
-  printf("DigitalWrite %d on pin %d\n", value, pin);
+ verbose_printf("DigitalWrite %d on pin %d\n", value, pin);
   asipErr_t err = ERR_NO_ERROR;
   if (pin < TOTAL_PINCOUNT  ){
      if( asip.getPinMode(pin) == OUTPUT_MODE || asip.getPinMode(pin) == INPUT_MODE || asip.getPinMode(pin) == INPUT_PULLUP_MODE){    // enable setting of pullups

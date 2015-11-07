@@ -12,40 +12,42 @@
 #include "asip.h"
 #include "asipIO.h"
 
-#ifdef ASIP_DEBUG
-Stream *debugStream;   // debug output
+#ifdef ASIP_DEBUG_SOFT_SERIAL
 #define DEBUG_TX_PIN 19   // connect TTL to USB adapter receive to this pin 
 // set up a new serial port
 SendOnlySoftwareSerial debugSoftSerial (DEBUG_TX_PIN);  
 #endif
 
 // message strings, Move this to program memory ?
-char * errStr[] = {"NO_ERROR", "INVALID_SERVICE", "UNKNOWN_REQUEST", "INVALID_PIN", "MODE_UNAVAILABLE", "INVALID_MODE", "WRONG_MODE", "INVALID_DEVICE_NUMBER", "DEVICE_NOT_AVAILABLE", "I2C NOT ENABLED"};
+char const *errStr[] = {"NO_ERROR", "INVALID_SERVICE", "UNKNOWN_REQUEST", "INVALID_PIN", "MODE_UNAVAILABLE", "INVALID_MODE", "WRONG_MODE", "INVALID_DEVICE_NUMBER", "DEVICE_NOT_AVAILABLE", "I2C NOT ENABLED"};
  
 asipClass:: asipClass(){
   
 }
  
-void asipClass::begin(Stream *s, int svcCount, asipServiceClass **serviceArray, char *sketchName )
+void asipClass::begin(Stream *s, int svcCount, asipServiceClass **serviceArray, char const *sketchName )
 {
-  serial = s;
-#ifdef ASIP_DEBUG  
-  debugSoftSerial.begin(ASIP_DEBUG_BAUD);
+  serial = s;  
+#ifdef ASIP_DEBUG_SOFT_SERIAL
+  debugSoftSerial.begin(ASIP_DEBUG_BAUD); // todo, move this to debug.h ?
   debugStream = &debugSoftSerial; 
-  printf("\n"); // debug output 
-  printf("ASIP %d.%d with sketch %s on %s\n", ASIP_MAJOR_VERSION, ASIP_MINOR_VERSION, sketchName, CHIP_NAME);
-  VERBOSE_DEBUG( printf("Verbose Debug enabled\n");) // this will only print if VERBOSE_DEBUG macro argument is uncommented
-#endif  
+#else
+ //debugStream = DEBUG_STREAM;  // defined in debug.h
+#endif 
+ debug_printf("\n"); // debug output 
+ debug_printf("ASIP %d.%d with sketch %s on %s\n", ASIP_MAJOR_VERSION, ASIP_MINOR_VERSION, sketchName, CHIP_NAME);
+ verbose_printf("Verbose Debug enabled\n"); // this will only print if VERBOSE_DEBUG macro argument is uncommented
+
   services = serviceArray;
   nbrServices = svcCount; 
   // set all pins to UNALLOCATED_PIN state
   for(byte p=0; p < TOTAL_PINCOUNT; p++) { 
      setPinMode(p, UNALLOCATED_PIN_MODE);
   }
-#ifdef ASIP_DEBUG   
+#ifdef DEBUG_TX_PIN
   asip.reserve(DEBUG_TX_PIN); 
 #endif  
-  programName = sketchName;
+  programName = (char*)sketchName;
   s->write(INFO_MSG_HEADER);
   s->print(sketchName);  
   // list all implemented service tags
@@ -75,17 +77,19 @@ void asipClass::service()
         }        
         else {
           int svc = 0; 
-          while(svc < nbrServices) {   
+          while(svc < nbrServices) {          
             if( services[svc]->ServiceId == tag) {
-              if(serial->read() == ',') {// tag must be followed by a separator        
+              if(serial->read() == ',') {// tag must be followed by a separator   
                 services[svc]->processRequestMsg(serial);
-               break;
-              }
+                break;
+              }    
             }
            svc++;
            if(svc >= nbrServices) { // check if no match
-             sendErrorMessage(tag, '?', ERR_INVALID_SERVICE, serial);         
-            } 
+             sendErrorMessage(tag, '?', ERR_INVALID_SERVICE, serial);                    
+             while( serial->available() && serial->read() != '\n') // skip to the end of  line
+                 ;             
+            }   
           } 
         }           
      }
@@ -97,11 +101,11 @@ void asipClass::service()
   unsigned int currentTick = millis();
   for(int i=0; i < nbrServices; i++) {
     if( services[i]->autoInterval > 0) {  // zero disables autoInterval
-       //VERBOSE_DEBUG(  printf("Auto report, tick= %u, trig = %u, interval=%u\n",currentTick,(currentTick - services[i]->nextTrigger),services[i]->autoInterval);)
+       //debug_printf("Auto report, tick= %u, trig = %u, interval=%u\n",currentTick,(currentTick - services[i]->nextTrigger),services[i]->autoInterval);
        if( currentTick >= services[i]->nextTrigger )  {
          services[i]->reportValues(serial);
          services[i]->nextTrigger =  currentTick + services[i]->autoInterval; // reset the count
-        //VERBOSE_DEBUG( printf("Counter reset to %u\n", services[i]->nextTrigger);)
+        //verbose_printf("Counter reset to %u\n", services[i]->nextTrigger);
        }      
     }    
   }
@@ -109,6 +113,7 @@ void asipClass::service()
 
 void asipClass::processDebugMsg()
 {   
+#ifdef ASIP_DEBUG
     // echo incoming debug messages to the debug stream
     int c;
     unsigned int startMillis = millis();
@@ -119,6 +124,7 @@ void asipClass::processDebugMsg()
         debugStream->write(c);
       }      
     } while( c != '\n' && millis() - startMillis < 1000); // wait at most one second for the end of the message        
+#endif    
 }
 
 void asipClass::processSystemMsg()
@@ -185,7 +191,7 @@ void asipClass::processSystemMsg()
       serial->write(MSG_TERMINATOR);
    }   
    else if(request == tag_RESTART_REQUEST) {
-       printf("Resetting services\n");
+      debug_printf("Resetting services\n");
        for(int i=0; i < nbrServices; i++) {
            services[i]->reset();
            services[i]->autoInterval = 0;   // this disables autoInterval          
@@ -202,13 +208,13 @@ asipErr_t asipClass::registerPinMode(byte pin, pinMode_t mode, char serviceId)
   asipErr_t err = ERR_NO_ERROR;
   // Serial.print("PIN in reg =") ; Serial.println(pin);    
   if(pin >= 0 && pin < TOTAL_PINCOUNT) {     
-  // Serial.print("mode in reg =") ; Serial.println(pinModes[pin]); 
+   //Serial.print("mode in reg =") ; Serial.println(pinModes[pin]); 
     // only system can set RESERVE_MODE
     if( (mode == RESERVED_MODE && serviceId == SYSTEM_SERVICE_ID) || isValidServiceId(serviceId) ){
         if( getPinMode(pin) < RESERVED_MODE) {    
           setPinMode(pin,mode); 
           pinRegister[pin].service = serviceId - '@';     
-          VERBOSE_DEBUG(printf("register pin %d for mode %d for service %c (as %d)\n", pin, mode,serviceId,pinRegister[pin].service ));         
+          verbose_printf("register pin %d for mode %d for service %c (as %d)\n", pin, mode,serviceId,pinRegister[pin].service );         
         }
         else {
          err = ERR_MODE_UNAVAILABLE;
@@ -231,7 +237,7 @@ asipErr_t asipClass::deregisterPinMode(byte pin)
   if(pin >= 0 && pin < TOTAL_PINCOUNT) {     
     if( getPinMode(pin) < RESERVED_MODE) {    
       setPinMode(pin,UNALLOCATED_PIN_MODE);  
-      VERBOSE_DEBUG(printf("deregister  pin %d\n", pin));  
+      verbose_printf("deregister  pin %d\n", pin);  
     }
     else {
      err = ERR_MODE_UNAVAILABLE;
@@ -240,14 +246,14 @@ asipErr_t asipClass::deregisterPinMode(byte pin)
   else {
      err = ERR_INVALID_PIN;
   }
-  if(err)  printf("de-register error %d\n", err);
+  if(err) debug_printf("de-register error %d\n", err);
   return err;
 }
 
 // reserve the given pin
 asipErr_t asipClass::reserve(byte pin)
 {
-     VERBOSE_DEBUG(printf("Reserving pin %d\n", pin));  
+     verbose_printf("Reserving pin %d\n", pin);  
      return registerPinMode(pin,RESERVED_MODE,SYSTEM_SERVICE_ID);
 } 
  
@@ -413,7 +419,7 @@ void asipClass::sendAnalogPinMap()
   } 
   serial->write(MSG_TERMINATOR); 
   if( pinsToReport != 0) {
-     printf("number of analog pins is off by %d\n", pinsToReport);
+    debug_printf("number of analog pins is off by %d\n", pinsToReport);
   }
 }
 
@@ -509,8 +515,6 @@ void asipServiceClass::setAutoreport(unsigned int ticks) // sets number ticks be
   autoInterval = ticks;
   unsigned int currentTick = millis(); // truncate to a 16 bit value
   nextTrigger = currentTick + autoInterval; // set the next trigger tick count
-  printf("\n"); //(todo - the first character printed to softserial here is corrupted)
-  printf("Auto report set to %u for service %c\n",ticks, ServiceId);
 }
 
 char asipServiceClass::getServiceId()

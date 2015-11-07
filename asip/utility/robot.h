@@ -11,6 +11,7 @@
 #ifndef robot_h
 #define robot_h
 #include "asip.h"
+#include "robot_pins.h"
 
 // Service and method defines
 // Service IDs must be unique across all services

@@ -48,10 +48,29 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "debug.h"
 
 // Buffer for printf
-#ifdef PRINTF_DEBUG 
+#ifdef ASIP_DEBUG && not defined(__MK20DX256__) // Teensy 3.1
 char _buf[ASIP_DEBUG_BUFFER_SIZE];   // increase buffer size if strings will be 80 chars or more
 #endif
 
+#if defined(__MK20DX128__) || defined(__MK20DX256__) || defined (__MKL26Z64__)
+#warning "todo support for hardware serial" 
+void SendOnlySoftwareSerial::begin(long speed)
+{
+}
+
+//
+// Constructor
+//
+SendOnlySoftwareSerial::SendOnlySoftwareSerial(uint8_t transmitPin, bool inverse_logic /* = false */)  
+{ 
+}
+
+SendOnlySoftwareSerial::~SendOnlySoftwareSerial()
+{
+
+}
+
+#else
 //
 // Lookup table
 //
@@ -286,3 +305,4 @@ int SendOnlySoftwareSerial::peek()
 {
   return -1;
 }
+#endif

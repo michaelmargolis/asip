@@ -46,18 +46,6 @@ class HUBeeBMDWheel
         byte STBY;
 };
 
-// encoder pins
-#if defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__)
-const byte wheel_1QeiAPin = 2; //external interrupt 2 used for wheel 1 encoder channel A
-const byte wheel_1QeiBPin = 1; //wheel 1 encoder channel B input
-const byte wheel_2QeiAPin = 21; //pin change interrupt 2 used for wheel 2 encoder channel A
-const byte wheel_2QeiBPin = 20; //wheel 2 encoder channel B input
-#else
-const byte wheel_1QeiAPin = 3; //external interrupt 0 used for wheel 1 encoder channel A
-const byte wheel_1QeiBPin = 7; //wheel 1 encoder channel B input
-const byte wheel_2QeiAPin = 2; //external interrupt 1 used for wheel 2 encoder channel A
-const byte wheel_2QeiBPin = 4; //wheel 2 encoder channel B input
-#endif
 
 void encodersBegin();
 void encodersGetData(unsigned long &pulse1,long &count1, unsigned long &pulse2,  long &count2);

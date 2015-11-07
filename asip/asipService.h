@@ -41,19 +41,17 @@ public:
   
 protected:
    void setAutoreport(unsigned int ticks); // sets number ticks between events, 0 disables 
+   const char ServiceId;       // the unique Upper Case ASCII character that identifies this service 
    const char EventId;         // the unique character that identifies the default event provided by service
    byte nbrElements;           // the number of items supported by this service
    byte pinCount;              // total number of pins in the pins array 
    const pinArray_t *pins;     // stores pins used by this service  
    
    friend class asipClass; 
-   const char ServiceId;       // the unique Upper Case ASCII character that identifies this service 
    unsigned int autoInterval;  // the number of ticks between each autoevent, 0 disables autoevents
    unsigned int nextTrigger;   // tick value for the next event (note this rolls over after 65 seconds so intervals should be limited to under one minute
 };
 
 typedef asipServiceClass* asipService;
-
-#define asipServiceCount(s)  (sizeof(s) / sizeof(asipService))
 
 #endif

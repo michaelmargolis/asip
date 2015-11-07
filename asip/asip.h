@@ -83,12 +83,14 @@ const char MSG_TERMINATOR = '\n';
 //#define asipSvcName   PROGMEM const prog_char * 
 #define asipSvcName static PROGMEM const prog_char 
 
+#define asipServiceCount(s)  (sizeof(s) / sizeof(asipService))
+
 class asipClass 
 {
 public:
   asipClass();
   //void begin(Stream *s, int svcCount, asipServiceClass *serviceArray[], char *sketchName );
-  void begin(Stream *s, int svcCount, asipServiceClass (**serviceArray), char *sketchName );
+  void begin(Stream *s, int svcCount, asipServiceClass (**serviceArray), char const *sketchName );
   asipErr_t registerPinMode(byte pin, pinMode_t mode, char serviceId);
   asipErr_t reserve(byte pin); 
   void service();

@@ -86,8 +86,7 @@ void asipServoClass::reset()
  
 void asipServoClass::processRequestMsg(Stream *stream)
 {
-   int request = stream->read();
-   int angle;
+   int request = stream->read();  
    if(request == tag_SERVO_WRITE) {
      int servoId = 0;  
      if(nbrElements == 0) {

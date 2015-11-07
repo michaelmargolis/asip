@@ -53,7 +53,7 @@ void robotMotorClass::setMotor(byte motor, int speed)
    if(motor < NBR_WHEELS){
        speed = constrain(speed,-255,255);
        wheel[motor].setMotorPower(speed);
-       printf("Motor %d set to %d\n", motor, speed);
+     //  debug_printf("Motor %d set to %d\n", motor, speed);
    }
 }
 
@@ -68,7 +68,7 @@ void robotMotorClass::stopMotor(byte motor)
 {
    if(motor < NBR_WHEELS){
        wheel[motor].setMotorPower(0);
-       printf("Motor %d stopped\n");
+      // debug_printf("Motor %d stopped\n", motor);
    }
 }
 
@@ -82,7 +82,7 @@ void robotMotorClass::stopMotors()
    
 void robotMotorClass::processRequestMsg(Stream *stream)
 {
-   int arg0, arg1; 
+   int arg0 =-1, arg1 = -1; 
    int request = stream->read();
    // parse the correct number of arguments for each method 
    if( request == tag_SET_MOTOR || request == tag_SET_MOTORS || request == tag_STOP_MOTOR) {
@@ -107,9 +107,9 @@ encoderClass::encoderClass(const char svcId) : asipServiceClass(svcId)
 
 // each encoder uses 2 pins
 void encoderClass::begin(byte nbrElements, byte pinCount, const pinArray_t pins[])
-{
+{  
   asipServiceClass::begin(nbrElements,pinCount,pins);
-  encodersBegin(); // todo - use the pins array instead of hard coding in hubeeWheel.cpp
+  encodersBegin(); // uses pins defined in robot_pins.h
 }
 
 void encoderClass::reportValues(Stream *stream) 

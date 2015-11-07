@@ -12,6 +12,8 @@
 
 
 #include "HUBeeWheel.h" // this is the modified version of the hubee library
+#include "robot_pins.h"
+#include "asip.h"  // only needed for debug
 
 HUBeeBMDWheel::HUBeeBMDWheel()
 {
@@ -136,7 +138,7 @@ void HUBeeBMDWheel::setMotor()
     stopMotor();
     return;
   }
-  printf("pwm on pin %d set to %d\n",_PWM, rawPower);
+ 
   //write the speed value to PWM
   analogWrite(_PWM, rawPower);
   //XOR the motor Direction and motorDirectionMode boolean values
@@ -162,6 +164,44 @@ int HUBeeBMDWheel::getMotorPower()
 
 // code for HUB-ee encoder
 
+#if defined(__MK20DX256__) // Teensy 3.1
+// Teensy 3.1 uses the Encoder library here: https://www.pjrc.com/teensy/td_libs_Encoder.html
+
+#define ENCODER_USE_INTERRUPTS
+
+#include "asipEncoder.h"
+
+Encoder_internal_state_t * Encoder::interruptArgs[];
+Encoder encoderWheelLeft(wheel_1QeiAPin, wheel_1QeiBPin);
+Encoder encoderWheelRight(wheel_2QeiAPin, wheel_2QeiBPin);
+
+void encodersBegin() 
+{  
+  encoderWheelLeft.begin();
+  encoderWheelRight.begin();
+}
+
+
+// todo - modify encoder class to provide pulse and count in a single method?
+void encodersGetData(unsigned long &pulse1,long &count1, unsigned long &pulse2,  long &count2)
+{
+  count1 = encoderWheelLeft.read(); 
+  pulse1 = encoderWheelLeft.readPulseWidth();
+  encoderWheelLeft.write(0); 
+  count2 = encoderWheelRight.read();  
+  pulse2 = encoderWheelRight.readPulseWidth();  
+  encoderWheelRight.write(0);
+}
+
+void encodersReset()
+{
+  encoderWheelLeft.write(0);
+  encoderWheelRight.write(0);
+}
+
+#else
+// here for ATmega328 and similar  
+
 volatile unsigned long prevMicros[2];  // stores the time of the previous reading
 long prevCount[2];   // stores the most recent sent count
 
@@ -175,20 +215,24 @@ encoderData_t;
 encoderData_t encoderData;   // the raw encoder data
 encoderData_t encoderCache;  // cached copy to be used outside of interrupt routine
 
-const byte WHEEL1 = 0; // indices for the encoder arrrays
+const byte WHEEL1 = 0; // indices for the encoder arrays
 const byte WHEEL2 = 1;
 
 
-void QEI_wheel_1();  // forward declerations
+void QEI_wheel_1();  // forward decelerations
 void QEI_wheel_2();
+
 
 void encodersBegin() 
 {
+ // debug_printf("encoder begin\n");
   pinMode(wheel_1QeiAPin, INPUT_PULLUP);
   pinMode(wheel_2QeiAPin, INPUT_PULLUP);
   pinMode(wheel_1QeiBPin, INPUT_PULLUP);
   pinMode(wheel_2QeiBPin, INPUT_PULLUP);
-#if defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__)
+#if defined(__MK20DX256__) // Teensy 3.1
+  // interrupts are attached in the Encoder constructor
+#elif defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__)
   attachInterrupt(2, QEI_wheel_1, CHANGE);
   // pin change interrupt for pin 21
   *digitalPinToPCMSK(wheel_2QeiAPin) |= bit (digitalPinToPCMSKbit(wheel_2QeiAPin));  // enable pin
@@ -196,7 +240,7 @@ void encodersBegin()
   PCICR  |= bit (digitalPinToPCICRbit(wheel_2QeiAPin)); // enable interrupt for the group
 #else  
   attachInterrupt(1, QEI_wheel_1, CHANGE);
-  attachInterrupt(0, QEI_wheel_2, CHANGE);
+  attachInterrupt(0, QEI_wheel_2, CHANGE); 
   #endif
 }
 
@@ -255,7 +299,7 @@ void QEI_wheel_1()
 
 //wheel 2 quadrature encoder interrupt function
 void QEI_wheel_2()
-{
+{ 
   encoderData.pulseWidth[WHEEL2] = micros() - prevMicros[WHEEL2];
   prevMicros[WHEEL2] = micros(); // store the current time
 
@@ -285,10 +329,6 @@ void QEI_wheel_2()
   //if you get here then A has gone low and B is low
   encoderData.count[WHEEL2]++;
 }
-
-#if defined (__MK20DX256__) // not for Teensy 3.1
-// todo
-#else
 // only used for pin change interrupts
 ISR (PCINT2_vect) // handle pin change interrupt for vector 2
 {
