@@ -8,7 +8,8 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
- #include <asipLCD.h> 
+#ifdef HASLCD
+#include <asipLCD.h> 
 
 #if defined(__MK20DX256__) // Teensy 3.1 
 #include <i2c_t3.h>  // teensy i2c routines
@@ -121,6 +122,4 @@ void asipLCDClass::hGraph(char * title, int value1, int value2,int value3,int va
 }
 
  
-   
-
-
+#endif

@@ -2,6 +2,9 @@
  * Mirtle sketch for robot with Teensy 3.1 board
  */
 
+#define HASLCD
+#define HASPIXELS
+
 #include <asip.h>       // the base class definitions
 #include <asipIO.h>     // the core I/O class definition
 #include <utility/robot.h>       // definitions for mirtle services(motor, ir, encoder etc) 

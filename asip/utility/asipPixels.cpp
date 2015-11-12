@@ -8,9 +8,11 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
- #include <asipPixels.h> 
- #include <Adafruit_NeoPixel.h>
- #include "robot_pins.h"
+#ifdef HASPIXELS
+
+#include <asipPixels.h> 
+#include <Adafruit_NeoPixel.h>
+#include "robot_pins.h"
 
 #define NUMBER_OF_PIXELS 18  // increase this if the number of pixels is greater  
 #ifdef  neoPixelPin
@@ -107,7 +109,6 @@ void asipPixelsClass::processRequestMsg(Stream *stream)
          ; // skip to end of line
 }
 #endif
-// private methods
-
+#endif
 
 
