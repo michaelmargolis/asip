@@ -8,7 +8,8 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifdef HASLCD
+//#ifdef HASLCD
+#if defined(__MK20DX256__)
 #include <asipLCD.h> 
 
 #if defined(__MK20DX256__) // Teensy 3.1 

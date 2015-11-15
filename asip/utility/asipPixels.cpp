@@ -8,8 +8,7 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifdef HASPIXELS
-
+#if defined(__MK20DX256__)
 #include <asipPixels.h> 
 #include <Adafruit_NeoPixel.h>
 #include "robot_pins.h"

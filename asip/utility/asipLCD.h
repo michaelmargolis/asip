@@ -35,7 +35,6 @@ public:
    void reportValues(Stream * stream);
    void reportValue(int sequenceId, Stream * stream) ; // not used in this service  
    void processRequestMsg(Stream *stream);  
-private: 
   void text(const char *txt, int row);
   void text(const char *txt, int row, int column);
   void show();
